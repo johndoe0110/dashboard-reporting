@@ -1,29 +1,39 @@
+import { useDatePicker } from '../hooks/useDatePicker';
+import Header from '../components/dashboard/Header';
+import RoasAlert from '../components/dashboard/RoasAlert';
+import KpiSection from '../components/dashboard/KpiSection';
+import BusinessMetrics from '../components/dashboard/BusinessMetrics';
+import SecondaryMetrics from '../components/dashboard/SecondaryMetrics';
+import CampaignTable from '../components/dashboard/CampaignTable';
+
 export default function Dashboard() {
-    return (
-      <div className="min-h-screen bg-black text-gray-200">
-        
-        {/* Header */}
-        <div className="px-4 md:px-6 lg:px-8 pt-4">
-          <h1 className="text-lg md:text-2xl font-bold text-blue-400">
-            WOWGROUP Daily Performance
-          </h1>
-          <p className="text-xs md:text-sm text-gray-400 mt-1">
-            Monday, January 5, 2026
-          </p>
-        </div>
-  
-        {/* Content */}
-        <div className="p-4 md:p-6 lg:p-8 space-y-6">
-          {/* KPI */}
-          <KpiSection />
-  
-          {/* Business Metrics */}
-          <BusinessMetrics />
-  
-          {/* Table */}
-          <CampaignTable />
-        </div>
+  const { selectedDate, setSelectedDate, wgToday, isToday } = useDatePicker();
+
+  return (
+    <div className="min-h-screen bg-black text-gray-200">
+      <Header 
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        wgToday={wgToday}
+        isToday={isToday}
+      />
+
+      <div className="p-4 md:p-6 lg:p-8 space-y-6">
+        {/* ROAS Alert */}
+        <RoasAlert currentRoas={0.91} targetRoas={2.0} />
+
+        {/* KPI Section */}
+        <KpiSection />
+
+        {/* Business Metrics */}
+        <BusinessMetrics />
+
+        {/* Secondary Metrics */}
+        <SecondaryMetrics />
+
+        {/* Campaign Tables */}
+        <CampaignTable selectedDate={selectedDate} />
       </div>
-    );
-  }
-  
+    </div>
+  );
+}
