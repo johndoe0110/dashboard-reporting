@@ -35,7 +35,8 @@ export default function Header({ selectedDate, setSelectedDate, wgToday, isToday
             </p>
             <span className="hidden sm:inline text-gray-600">•</span>
             <p className="text-xs md:text-sm text-gray-500">
-              Live Time: {time}
+              Live Time: 
+              <span className="ml-2 bg-green-600/20 text-green-400">{time}</span>
             </p>
           </div>
         </div>
