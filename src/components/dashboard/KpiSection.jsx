@@ -1,3 +1,10 @@
+import { 
+  DollarSign, 
+  TrendingUp, 
+  Percent, 
+  UserPlus, 
+  Wallet 
+} from 'lucide-react';
 import KpiCard from './KpiCard';
 
 export default function KpiSection() {
@@ -9,10 +16,9 @@ export default function KpiSection() {
 
       <div
         className="
-          grid gap-3
-          grid-cols-1
-          sm:grid-cols-2
-          lg:grid-cols-3
+          grid gap-2 md:gap-3
+          grid-cols-3
+          md:grid-cols-4
           xl:grid-cols-6
         "
       >
@@ -21,36 +27,42 @@ export default function KpiSection() {
           value="Rp 3.421.033" 
           color="red"
           description="Marketing Investment (Facebook + TikTok)"
+          icon={DollarSign}
         />
         <KpiCard 
           title="REVENUE" 
           value="Rp 3.114.000" 
           color="green"
           description="Amount of First Deposit"
+          icon={TrendingUp}
         />
         <KpiCard 
           title="DEPOSIT RATE" 
           value="86.3%" 
           color="purple"
           description="63 deposits / 73 registrations"
+          icon={Percent}
         />
         <KpiCard 
-          title="ADSPENT - FIRST D..." 
+          title="ADSPENT - FIRST DEPO" 
           value="-Rp 307.033" 
           color="red"
           description="Loss Today"
+          icon={TrendingUp}
         />
         <KpiCard 
           title="NEW REGISTRATIONS" 
           value="73" 
           color="orange"
           description="New Account Sign-ups"
+          icon={UserPlus}
         />
         <KpiCard 
           title="NEW DEPOSITS" 
           value="63" 
           color="purple"
           description="Deposit Transactions"
+          icon={Wallet}
         />
       </div>
     </div>

@@ -1,3 +1,11 @@
+import { 
+  Target, 
+  Calculator, 
+  CreditCard, 
+  TrendingUp, 
+  Users, 
+  UserCheck 
+} from 'lucide-react';
 import MetricCard from './MetricCard';
 
 export default function BusinessMetrics() {
@@ -9,10 +17,9 @@ export default function BusinessMetrics() {
 
       <div
         className="
-          grid gap-3
-          grid-cols-1
-          sm:grid-cols-2
-          lg:grid-cols-3
+          grid gap-2 md:gap-3
+          grid-cols-3
+          md:grid-cols-4
           xl:grid-cols-6
         "
       >
@@ -27,18 +34,21 @@ export default function BusinessMetrics() {
             remaining: 2222,
           }}
           showWarning={true}
+          icon={Target}
         />
         <MetricCard
           title="COST PER REGISTRATION"
           value="Rp 46.863"
           color="blue"
           description="Acquisition Efficiency"
+          icon={Calculator}
         />
         <MetricCard
           title="COST PER DEPOSIT"
           value="Rp 54.302"
           color="blue"
           description="Based on 63 deposits"
+          icon={CreditCard}
         />
         <MetricCard
           title="ROAS"
@@ -46,18 +56,21 @@ export default function BusinessMetrics() {
           color="orange"
           description="Return on Ad Spend"
           showWarning={true}
+          icon={TrendingUp}
         />
         <MetricCard
           title="ACTIVE PLAYERS"
           value="2,981"
           color="green"
           description="Current Active Users"
+          icon={Users}
         />
         <MetricCard
           title="ADS LEADS"
           value="29"
           color="purple"
           description="Facebook + TikTok Leads"
+          icon={UserCheck}
         />
       </div>
     </div>
