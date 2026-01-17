@@ -1,10 +1,14 @@
+import { useNavigate } from 'react-router-dom';
 import { useDateTime } from '../../hooks/useDateTime';
 import { formatDateIndonesian } from '../../utils/dateUtils';
+import { useAuth } from '../../contexts/AuthContext';
 import DatePicker from '../common/DatePicker';
 import Button from '../common/Button';
 
 export default function Header({ selectedDate, setSelectedDate, wgToday, isToday }) {
   const { time } = useDateTime();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -19,6 +23,14 @@ export default function Header({ selectedDate, setSelectedDate, wgToday, isToday
   const handleDesktop = () => {
     // TODO: Implement desktop view functionality
     console.log('Desktop view');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleAdmin = () => {
+    navigate('/admin');
   };
 
   return (
@@ -52,6 +64,23 @@ export default function Header({ selectedDate, setSelectedDate, wgToday, isToday
             <span className="hidden sm:inline">Export Dashboard</span>
             <span className="sm:hidden">Export</span>
           </Button>
+          {user ? (
+            <Button 
+              variant="primary" 
+              onClick={handleAdmin}
+              className="text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 py-1 md:py-1.5 whitespace-nowrap"
+            >
+              Admin
+            </Button>
+          ) : (
+            <Button 
+              variant="primary" 
+              onClick={handleLogin}
+              className="text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 py-1 md:py-1.5 whitespace-nowrap"
+            >
+              Login
+            </Button>
+          )}
         </div>
       </div>
 
