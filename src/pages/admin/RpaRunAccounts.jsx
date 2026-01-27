@@ -1,34 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { rpaRunAccountsAPI } from '../../services/api';
-
-// ========== DUMMY DATA (CURRENTLY ACTIVE) ==========
-const initialDummyData = [
-  {
-    id: 4,
-    rpa_run_id: 1,
-    ad_account_id: 1,
-    status: 'running',
-    started_at: '2025-12-21T10:00:00.000Z',
-    finished_at: '2025-12-30T10:00:00.000Z',
-    rows_upserted: 10,
-    json_data: '{}',
-    error_message: null,
-    meta: '{}',
-    created_at: '2026-01-17T11:09:00.000Z',
-  },
-];
+import { rpaRunAccountsAPI, rpaRunsAPI, profileAdAccountsAPI } from '../../services/api';
 
 export default function RpaRunAccounts() {
-  const [data, setData] = useState(initialDummyData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [runs, setRuns] = useState([]);
+  const [adAccounts, setAdAccounts] = useState([]);
   const [formData, setFormData] = useState({
     rpa_run_id: '',
     ad_account_id: '',
@@ -41,14 +25,6 @@ export default function RpaRunAccounts() {
     meta: '{}',
   });
 
-  // ========== DUMMY LOAD DATA (CURRENTLY ACTIVE) ==========
-  const loadData = () => {
-    setLoading(false);
-    // Dummy data already loaded in initial state
-  };
-
-  // ========== API LOAD DATA (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   useEffect(() => {
     loadData();
   }, []);
@@ -57,8 +33,14 @@ export default function RpaRunAccounts() {
     try {
       setLoading(true);
       setError('');
-      const response = await rpaRunAccountsAPI.list();
-      setData(response.data || []);
+      const [runAccRes, runsRes, adAccRes] = await Promise.all([
+        rpaRunAccountsAPI.list(1, 99999),
+        rpaRunsAPI.list(1, 99999),
+        profileAdAccountsAPI.list(1, 99999),
+      ]);
+      setData(runAccRes?.data?.list || []);
+      setRuns(runsRes?.data?.list || []);
+      setAdAccounts(adAccRes?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load RPA run accounts');
       console.error('Error loading data:', err);
@@ -66,7 +48,6 @@ export default function RpaRunAccounts() {
       setLoading(false);
     }
   };
-  */
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -117,52 +98,6 @@ export default function RpaRunAccounts() {
     });
   };
 
-  // ========== DUMMY SUBMIT (CURRENTLY ACTIVE) ==========
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    if (editingItem) {
-      setData(data.map(item => 
-        item.id === editingItem.id 
-          ? {
-              ...item,
-              rpa_run_id: parseInt(formData.rpa_run_id),
-              ad_account_id: parseInt(formData.ad_account_id),
-              status: formData.status,
-              started_at: new Date(formData.started_at).toISOString(),
-              finished_at: formData.finished_at ? new Date(formData.finished_at).toISOString() : null,
-              rows_upserted: parseInt(formData.rows_upserted),
-              json_data: formData.json_data,
-              error_message: formData.error_message || null,
-              meta: formData.meta,
-            }
-          : item
-      ));
-    } else {
-      const newItem = {
-        id: Date.now(),
-        rpa_run_id: parseInt(formData.rpa_run_id),
-        ad_account_id: parseInt(formData.ad_account_id),
-        status: formData.status,
-        started_at: new Date(formData.started_at).toISOString(),
-        finished_at: formData.finished_at ? new Date(formData.finished_at).toISOString() : null,
-        rows_upserted: parseInt(formData.rows_upserted),
-        json_data: formData.json_data,
-        error_message: formData.error_message || null,
-        meta: formData.meta,
-        created_at: new Date().toISOString(),
-      };
-      setData([...data, newItem]);
-    }
-    
-    setSubmitting(false);
-    handleCloseModal();
-  };
-
-  // ========== API SUBMIT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -196,18 +131,7 @@ export default function RpaRunAccounts() {
       setSubmitting(false);
     }
   };
-  */
 
-  // ========== DUMMY DELETE (CURRENTLY ACTIVE) ==========
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this RPA run account?')) {
-      return;
-    }
-    setData(data.filter(item => item.id !== id));
-  };
-
-  // ========== API DELETE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this RPA run account?')) {
       return;
@@ -222,7 +146,6 @@ export default function RpaRunAccounts() {
       console.error('Error deleting data:', err);
     }
   };
-  */
 
   const filteredData = data.filter(item =>
     item.rpa_run_id.toString().includes(searchTerm) ||
@@ -336,7 +259,9 @@ export default function RpaRunAccounts() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          // className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          disabled
+                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -361,27 +286,39 @@ export default function RpaRunAccounts() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    RPA Run ID
+                    RPA Run
                   </label>
-                  <input
-                    type="number"
+                  <select
                     value={formData.rpa_run_id}
                     onChange={(e) => setFormData({ ...formData, rpa_run_id: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
-                  />
+                  >
+                    <option value="">Select RPA Run</option>
+                    {runs.map((run) => (
+                      <option key={run.id} value={run.id}>
+                        #{run.id} - Profile {run.profile_id} ({run.run_type})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Ad Account ID
+                    Ad Account
                   </label>
-                  <input
-                    type="number"
+                  <select
                     value={formData.ad_account_id}
                     onChange={(e) => setFormData({ ...formData, ad_account_id: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
-                  />
+                  >
+                    <option value="">Select Ad Account</option>
+                    {adAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.ad_account_id} (Profile {acc.profile_id})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">

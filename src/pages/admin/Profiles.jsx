@@ -1,43 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { profilesAPI } from '../../services/api';
-
-// ========== DUMMY DATA (CURRENTLY ACTIVE) ==========
-const initialDummyData = [
-  {
-    id: 1,
-    adspower_profile_id: 'adspower-123',
-    name: 'Profile Name',
-    status: 'active',
-    created_at: '2026-01-07T14:28:24.000Z',
-    updated_at: '2026-01-07T14:28:24.000Z',
-  },
-];
+// ========== API IMPORTS ==========
+import { profilesAPI } from '../../services/api';
 
 export default function Profiles() {
-  const [data, setData] = useState(initialDummyData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showPassword, setShowPassword] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     adspower_profile_id: '',
-    name: '',
-    status: 'active',
+    fb_user_id: '',
+    fb_email: '',
+    fb_username: '',
+    fb_password_encrypted: '',
+    fb_status: 'active',
   });
 
-  // ========== DUMMY LOAD DATA (CURRENTLY ACTIVE) ==========
-  const loadData = () => {
-    setLoading(false);
-    // Dummy data already loaded in initial state
-  };
-
-  // ========== API LOAD DATA (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   useEffect(() => {
     loadData();
   }, []);
@@ -46,8 +30,9 @@ export default function Profiles() {
     try {
       setLoading(true);
       setError('');
-      const response = await profilesAPI.list();
-      setData(response.data || []);
+      // Per Postman: { success, data: { list, ... } }
+      const response = await profilesAPI.list(1, 99999);
+      setData(response?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load profiles');
       console.error('Error loading data:', err);
@@ -55,22 +40,27 @@ export default function Profiles() {
       setLoading(false);
     }
   };
-  */
 
   const handleOpenModal = (item = null) => {
     if (item) {
       setEditingItem(item);
       setFormData({
         adspower_profile_id: item.adspower_profile_id,
-        name: item.name,
-        status: item.status,
+        fb_user_id: item.fb_user_id,
+        fb_email: item.fb_email,
+        fb_username: item.fb_username,
+        fb_password_encrypted: item.fb_password_encrypted,
+        fb_status: item.fb_status,
       });
     } else {
       setEditingItem(null);
       setFormData({
         adspower_profile_id: '',
-        name: '',
-        status: 'active',
+        fb_user_id: '',
+        fb_email: '',
+        fb_username: '',
+        fb_password_encrypted: '',
+        fb_status: 'active',
       });
     }
     setIsModalOpen(true);
@@ -81,43 +71,14 @@ export default function Profiles() {
     setEditingItem(null);
     setFormData({
       adspower_profile_id: '',
-      name: '',
-      status: 'active',
+      fb_user_id: '',
+      fb_email: '',
+      fb_username: '',
+      fb_password_encrypted: '',
+      fb_status: 'active',
     });
   };
 
-  // ========== DUMMY SUBMIT (CURRENTLY ACTIVE) ==========
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    if (editingItem) {
-      setData(data.map(item => 
-        item.id === editingItem.id 
-          ? {
-              ...item,
-              ...formData,
-              updated_at: new Date().toISOString(),
-            }
-          : item
-      ));
-    } else {
-      const newItem = {
-        id: Date.now(),
-        ...formData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setData([...data, newItem]);
-    }
-    
-    setSubmitting(false);
-    handleCloseModal();
-  };
-
-  // ========== API SUBMIT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -126,8 +87,11 @@ export default function Profiles() {
     try {
       const payload = {
         adspower_profile_id: formData.adspower_profile_id,
-        name: formData.name,
-        status: formData.status,
+        fb_user_id: formData.fb_user_id,
+        fb_email: formData.fb_email,
+        fb_username: formData.fb_username,
+        fb_password_encrypted: formData.fb_password_encrypted,
+        fb_status: formData.fb_status,
       };
 
       if (editingItem) {
@@ -145,18 +109,7 @@ export default function Profiles() {
       setSubmitting(false);
     }
   };
-  */
 
-  // ========== DUMMY DELETE (CURRENTLY ACTIVE) ==========
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this profile?')) {
-      return;
-    }
-    setData(data.filter(item => item.id !== id));
-  };
-
-  // ========== API DELETE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this profile?')) {
       return;
@@ -171,12 +124,12 @@ export default function Profiles() {
       console.error('Error deleting data:', err);
     }
   };
-  */
 
   const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.adspower_profile_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchTerm.toLowerCase())
+    item.fb_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.fb_username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.fb_user_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(item.adspower_profile_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString) => {
@@ -187,8 +140,8 @@ export default function Profiles() {
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
       <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2">AdsPower Profiles</h1>
-        <p className="text-sm sm:text-base text-gray-400 break-words">Manage AdsPower profiles</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2">Profiles</h1>
+        <p className="text-sm sm:text-base text-gray-400 break-words">Manage profiles and Facebook credentials</p>
         {error && (
           <div className="mt-4 bg-red-500/10 border border-red-500/40 rounded-lg p-3">
             <p className="text-red-400 text-sm">{error}</p>
@@ -199,11 +152,11 @@ export default function Profiles() {
       <div className="bg-zinc-900 rounded-xl border border-zinc-800">
         <div className="p-4 border-b border-zinc-800">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
+            <div className="relative flex-1 sm:flex-initial w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search profiles..."
+                placeholder="Search by email/username/user id..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
@@ -221,12 +174,15 @@ export default function Profiles() {
         </div>
 
         <div className="overflow-x-auto max-w-full">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[1100px]">
             <thead className="bg-zinc-800 text-gray-300">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">AdsPower Profile ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">FB User ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Username</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Password</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Created At</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Updated At</th>
@@ -236,7 +192,7 @@ export default function Profiles() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan="11" className="px-4 py-8 text-center text-gray-400">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <span>Loading...</span>
@@ -245,7 +201,7 @@ export default function Profiles() {
                 </tr>
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan="11" className="px-4 py-8 text-center text-gray-400">
                     No profiles found
                   </td>
                 </tr>
@@ -257,16 +213,41 @@ export default function Profiles() {
                   >
                     <td className="px-4 py-3 text-sm">{item.id}</td>
                     <td className="px-4 py-3 text-sm font-mono text-xs">{item.adspower_profile_id}</td>
-                    <td className="px-4 py-3 text-sm">{item.name}</td>
+                    <td className="px-4 py-3 text-sm">{item.fb_user_id}</td>
+                    <td className="px-4 py-3 text-sm">{item.fb_email}</td>
+                    <td className="px-4 py-3 text-sm">{item.fb_username}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs">
+                          {showPassword[item.id] ? item.fb_password_encrypted : '••••••••'}
+                        </span>
+                        <button
+                          onClick={() =>
+                            setShowPassword({
+                              ...showPassword,
+                              [item.id]: !showPassword[item.id],
+                            })
+                          }
+                          className="text-gray-400 hover:text-gray-300"
+                          type="button"
+                        >
+                          {showPassword[item.id] ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium capitalize ${
-                          item.status === 'active'
+                          item.fb_status === 'active'
                             ? 'bg-green-600/20 text-green-400'
                             : 'bg-red-600/20 text-red-400'
                         }`}
                       >
-                        {item.status}
+                        {item.fb_status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm">{formatDate(item.created_at)}</td>
@@ -281,7 +262,9 @@ export default function Profiles() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          // className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          disabled
+                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -317,12 +300,48 @@ export default function Profiles() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Name
+                  FB User ID
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.fb_user_id}
+                  onChange={(e) => setFormData({ ...formData, fb_user_id: e.target.value })}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.fb_email}
+                  onChange={(e) => setFormData({ ...formData, fb_email: e.target.value })}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={formData.fb_username}
+                  onChange={(e) => setFormData({ ...formData, fb_username: e.target.value })}
+                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Password (Encrypted)
+                </label>
+                <input
+                  type="text"
+                  value={formData.fb_password_encrypted}
+                  onChange={(e) => setFormData({ ...formData, fb_password_encrypted: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   required
                 />
@@ -332,12 +351,12 @@ export default function Profiles() {
                   Status
                 </label>
                 <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  value={formData.fb_status}
+                  onChange={(e) => setFormData({ ...formData, fb_status: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="active">active</option>
+                  <option value="inactive">inactive</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-4">

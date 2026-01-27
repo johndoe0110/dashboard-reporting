@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 // ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { adminAPI } from '../services/api';
-// import { getAuthToken, setAuthToken, removeAuthToken } from '../config/api';
+import { adminAPI } from '../services/api';
+import { getAuthToken, setAuthToken, removeAuthToken } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -23,24 +23,6 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // ========== DUMMY LOGIN (CURRENTLY ACTIVE) ==========
-  const login = (username, password) => {
-    // Dummy authentication (temporary due to CORS issue)
-    if (username === 'admin' && password === 'admin123') {
-      const userData = {
-        username: 'admin',
-        role: 'admin',
-        name: 'Administrator',
-      };
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return { success: true };
-    }
-    return { success: false, error: 'Invalid username or password' };
-  };
-
-  // ========== API LOGIN (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const login = async (username, password) => {
     try {
       const response = await adminAPI.login(username, password);
@@ -76,29 +58,7 @@ export function AuthProvider({ children }) {
       return { success: false, error: error.message || 'Invalid username or password' };
     }
   };
-  */
 
-  // ========== DUMMY REGISTER (CURRENTLY ACTIVE) ==========
-  const register = (userData) => {
-    // Dummy registration (temporary due to CORS issue)
-    // In real implementation, this would validate and save to backend
-    const { username, password, age, gender, phone_number } = userData;
-    
-    // Simple validation
-    if (!username || !password || !age || !gender || !phone_number) {
-      return { success: false, error: 'All fields are required' };
-    }
-
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters' };
-    }
-
-    // Simulate successful registration
-    return { success: true, message: 'Registration successful' };
-  };
-
-  // ========== API REGISTER (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const register = async (userData) => {
     try {
       const response = await adminAPI.register(userData);
@@ -112,16 +72,7 @@ export function AuthProvider({ children }) {
       return { success: false, error: error.message || 'Registration failed' };
     }
   };
-  */
 
-  // ========== DUMMY LOGOUT (CURRENTLY ACTIVE) ==========
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-  };
-
-  // ========== API LOGOUT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const logout = async () => {
     try {
       await adminAPI.logout();
@@ -133,7 +84,6 @@ export function AuthProvider({ children }) {
       removeAuthToken();
     }
   };
-  */
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, loading }}>

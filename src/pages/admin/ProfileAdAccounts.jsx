@@ -1,26 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { profileAdAccountsAPI } from '../../services/api';
-
-// ========== DUMMY DATA (CURRENTLY ACTIVE) ==========
-const initialDummyData = [
-  {
-    id: 2,
-    profile_id: 1,
-    facebook_account_id: 1,
-    ad_account_id: 'ad-acc-123',
-    account_name: 'Ad Account',
-    currency: 'USD',
-    timezone: 'UTC',
-    is_active: 1,
-    created_at: '2026-01-17T11:09:25.000Z',
-  },
-];
+import { profileAdAccountsAPI } from '../../services/api';
 
 export default function ProfileAdAccounts() {
-  const [data, setData] = useState(initialDummyData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -29,7 +13,6 @@ export default function ProfileAdAccounts() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     profile_id: '',
-    facebook_account_id: '',
     ad_account_id: '',
     account_name: '',
     currency: 'USD',
@@ -37,14 +20,6 @@ export default function ProfileAdAccounts() {
     is_active: 1,
   });
 
-  // ========== DUMMY LOAD DATA (CURRENTLY ACTIVE) ==========
-  const loadData = () => {
-    setLoading(false);
-    // Dummy data already loaded in initial state
-  };
-
-  // ========== API LOAD DATA (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   useEffect(() => {
     loadData();
   }, []);
@@ -53,8 +28,8 @@ export default function ProfileAdAccounts() {
     try {
       setLoading(true);
       setError('');
-      const response = await profileAdAccountsAPI.list();
-      setData(response.data || []);
+      const response = await profileAdAccountsAPI.list(1, 99999);
+      setData(response?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load profile ad accounts');
       console.error('Error loading data:', err);
@@ -62,14 +37,12 @@ export default function ProfileAdAccounts() {
       setLoading(false);
     }
   };
-  */
 
   const handleOpenModal = (item = null) => {
     if (item) {
       setEditingItem(item);
       setFormData({
         profile_id: item.profile_id.toString(),
-        facebook_account_id: item.facebook_account_id.toString(),
         ad_account_id: item.ad_account_id,
         account_name: item.account_name,
         currency: item.currency,
@@ -80,7 +53,6 @@ export default function ProfileAdAccounts() {
       setEditingItem(null);
       setFormData({
         profile_id: '',
-        facebook_account_id: '',
         ad_account_id: '',
         account_name: '',
         currency: 'USD',
@@ -96,7 +68,6 @@ export default function ProfileAdAccounts() {
     setEditingItem(null);
     setFormData({
       profile_id: '',
-      facebook_account_id: '',
       ad_account_id: '',
       account_name: '',
       currency: 'USD',
@@ -105,48 +76,6 @@ export default function ProfileAdAccounts() {
     });
   };
 
-  // ========== DUMMY SUBMIT (CURRENTLY ACTIVE) ==========
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    if (editingItem) {
-      setData(data.map(item => 
-        item.id === editingItem.id 
-          ? {
-              ...item,
-              profile_id: parseInt(formData.profile_id),
-              facebook_account_id: parseInt(formData.facebook_account_id),
-              ad_account_id: formData.ad_account_id,
-              account_name: formData.account_name,
-              currency: formData.currency,
-              timezone: formData.timezone,
-              is_active: parseInt(formData.is_active),
-            }
-          : item
-      ));
-    } else {
-      const newItem = {
-        id: Date.now(),
-        profile_id: parseInt(formData.profile_id),
-        facebook_account_id: parseInt(formData.facebook_account_id),
-        ad_account_id: formData.ad_account_id,
-        account_name: formData.account_name,
-        currency: formData.currency,
-        timezone: formData.timezone,
-        is_active: parseInt(formData.is_active),
-        created_at: new Date().toISOString(),
-      };
-      setData([...data, newItem]);
-    }
-    
-    setSubmitting(false);
-    handleCloseModal();
-  };
-
-  // ========== API SUBMIT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -155,7 +84,6 @@ export default function ProfileAdAccounts() {
     try {
       const payload = {
         profile_id: parseInt(formData.profile_id),
-        facebook_account_id: parseInt(formData.facebook_account_id),
         ad_account_id: formData.ad_account_id,
         account_name: formData.account_name,
         currency: formData.currency,
@@ -178,18 +106,7 @@ export default function ProfileAdAccounts() {
       setSubmitting(false);
     }
   };
-  */
 
-  // ========== DUMMY DELETE (CURRENTLY ACTIVE) ==========
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this profile ad account?')) {
-      return;
-    }
-    setData(data.filter(item => item.id !== id));
-  };
-
-  // ========== API DELETE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this profile ad account?')) {
       return;
@@ -204,13 +121,11 @@ export default function ProfileAdAccounts() {
       console.error('Error deleting data:', err);
     }
   };
-  */
 
   const filteredData = data.filter(item =>
     item.ad_account_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.account_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.profile_id.toString().includes(searchTerm) ||
-    item.facebook_account_id.toString().includes(searchTerm)
+    item.profile_id.toString().includes(searchTerm)
   );
 
   const formatDate = (dateString) => {
@@ -263,7 +178,6 @@ export default function ProfileAdAccounts() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Profile ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">FB Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Ad Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Account Name</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Currency</th>
@@ -296,7 +210,6 @@ export default function ProfileAdAccounts() {
                   >
                     <td className="px-4 py-3 text-sm">{item.id}</td>
                     <td className="px-4 py-3 text-sm">{item.profile_id}</td>
-                    <td className="px-4 py-3 text-sm">{item.facebook_account_id}</td>
                     <td className="px-4 py-3 text-sm font-mono text-xs">{item.ad_account_id}</td>
                     <td className="px-4 py-3 text-sm">{item.account_name}</td>
                     <td className="px-4 py-3 text-sm">{item.currency}</td>
@@ -322,7 +235,9 @@ export default function ProfileAdAccounts() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          // className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          disabled
+                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -353,18 +268,6 @@ export default function ProfileAdAccounts() {
                     type="number"
                     value={formData.profile_id}
                     onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Facebook Account ID
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.facebook_account_id}
-                    onChange={(e) => setFormData({ ...formData, facebook_account_id: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
                   />

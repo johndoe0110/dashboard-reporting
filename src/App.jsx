@@ -5,7 +5,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdminLayout from './components/admin/AdminLayout';
-import FacebookAccounts from './pages/admin/FacebookAccounts';
 import Profiles from './pages/admin/Profiles';
 import AdSpendHourly from './pages/admin/AdSpendHourly';
 import RpaRunAccounts from './pages/admin/RpaRunAccounts';
@@ -29,8 +28,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="/admin/facebook-accounts" replace />} />
-            <Route path="facebook-accounts" element={<FacebookAccounts />} />
+            <Route index element={<Navigate to="/admin/profiles" replace />} />
             <Route path="profiles" element={<Profiles />} />
             <Route path="ad-spend-hourly" element={<AdSpendHourly />} />
             <Route path="rpa-run-accounts" element={<RpaRunAccounts />} />

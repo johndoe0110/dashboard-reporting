@@ -37,6 +37,11 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+const withPageLimit = (path, page = 1, limit = 99999) => {
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return `${path}?${qs.toString()}`;
+};
+
 // Admin API
 export const adminAPI = {
   // Login
@@ -107,41 +112,12 @@ export const adminAPI = {
   },
 };
 
-// Facebook Accounts API
-export const facebookAccountsAPI = {
-  list: async () => {
-    return apiRequest('/facebook-accounts/v1/list');
-  },
-
-  getDetail: async (id) => {
-    return apiRequest(`/facebook-accounts/v1/detail/${id}`);
-  },
-
-  create: async (data) => {
-    return apiRequest('/facebook-accounts/v1/create', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  update: async (id, data) => {
-    return apiRequest(`/facebook-accounts/v1/update/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-
-  delete: async (id) => {
-    return apiRequest(`/facebook-accounts/v1/delete/${id}`, {
-      method: 'DELETE',
-    });
-  },
-};
+// NOTE: Per Postman collection used by this frontend, Facebook account fields are part of Profiles.
 
 // Profiles API
 export const profilesAPI = {
-  list: async () => {
-    return apiRequest('/profiles/v1/list');
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/profiles/v1/list', page, limit));
   },
 
   getDetail: async (id) => {
@@ -171,8 +147,8 @@ export const profilesAPI = {
 
 // Ad Spend Hourly API
 export const adSpendHourlyAPI = {
-  list: async () => {
-    return apiRequest('/ad-spend-hourly/v1/list');
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/ad-spend-hourly/v1/list', page, limit));
   },
 
   getDetail: async (id) => {
@@ -202,8 +178,8 @@ export const adSpendHourlyAPI = {
 
 // RPA Run Accounts API
 export const rpaRunAccountsAPI = {
-  list: async () => {
-    return apiRequest('/rpa-run-accounts/v1/list');
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/rpa-run-accounts/v1/list', page, limit));
   },
 
   getDetail: async (id) => {
@@ -233,8 +209,8 @@ export const rpaRunAccountsAPI = {
 
 // RPA Runs API
 export const rpaRunsAPI = {
-  list: async () => {
-    return apiRequest('/rpa-runs/v1/list');
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/rpa-runs/v1/list', page, limit));
   },
 
   getDetail: async (id) => {
@@ -264,8 +240,8 @@ export const rpaRunsAPI = {
 
 // Profile Ad Accounts API
 export const profileAdAccountsAPI = {
-  list: async () => {
-    return apiRequest('/profile-ad-accounts/v1/list');
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/profile-ad-accounts/v1/list', page, limit));
   },
 
   getDetail: async (id) => {

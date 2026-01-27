@@ -17,17 +17,6 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    // ========== DUMMY LOGIN (CURRENTLY ACTIVE) ==========
-    const result = login(username, password);
-    
-    if (result.success) {
-      navigate('/admin');
-    } else {
-      setError(result.error || 'Login failed');
-    }
-
-    // ========== API LOGIN (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-    /*
     try {
       const result = await login(username, password);
       
@@ -39,7 +28,6 @@ export default function Login() {
     } catch (err) {
       setError(err.message || 'Login failed');
     }
-    */
     
     setLoading(false);
   };

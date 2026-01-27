@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import { 
-  Facebook, 
   User, 
   TrendingUp,
   Menu,
@@ -14,13 +13,8 @@ import { useState } from 'react';
 
 const menuItems = [
   {
-    path: '/admin/facebook-accounts',
-    label: 'Facebook Accounts',
-    icon: Facebook,
-  },
-  {
     path: '/admin/profiles',
-    label: 'AdsPower Profiles',
+    label: 'Profiles',
     icon: User,
   },
   {

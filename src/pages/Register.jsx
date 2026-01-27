@@ -24,20 +24,6 @@ export default function Register() {
     setSuccess('');
     setLoading(true);
 
-    // ========== DUMMY REGISTER (CURRENTLY ACTIVE) ==========
-    const result = register(formData);
-    
-    if (result.success) {
-      setSuccess('Registration successful! Redirecting to login...');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } else {
-      setError(result.error || 'Registration failed');
-    }
-
-    // ========== API REGISTER (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-    /*
     try {
       const result = await register(formData);
       
@@ -52,8 +38,7 @@ export default function Register() {
     } catch (err) {
       setError(err.message || 'Registration failed');
     }
-    */
-    
+
     setLoading(false);
   };
 

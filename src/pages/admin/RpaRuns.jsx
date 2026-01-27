@@ -1,27 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { rpaRunsAPI } from '../../services/api';
-
-// ========== DUMMY DATA (CURRENTLY ACTIVE) ==========
-const initialDummyData = [
-  {
-    id: 1,
-    profile_id: 1,
-    facebook_account_id: 1,
-    run_type: 'hourly',
-    started_at: '2025-12-21T10:00:00.000Z',
-    finished_at: '2025-12-30T10:00:00.000Z',
-    status: 'running',
-    error_message: null,
-    meta: '{}',
-    created_at: '2026-01-17T11:08:47.000Z',
-  },
-];
+import { rpaRunsAPI } from '../../services/api';
 
 export default function RpaRuns() {
-  const [data, setData] = useState(initialDummyData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -39,14 +22,6 @@ export default function RpaRuns() {
     meta: '{}',
   });
 
-  // ========== DUMMY LOAD DATA (CURRENTLY ACTIVE) ==========
-  const loadData = () => {
-    setLoading(false);
-    // Dummy data already loaded in initial state
-  };
-
-  // ========== API LOAD DATA (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   useEffect(() => {
     loadData();
   }, []);
@@ -55,8 +30,8 @@ export default function RpaRuns() {
     try {
       setLoading(true);
       setError('');
-      const response = await rpaRunsAPI.list();
-      setData(response.data || []);
+      const response = await rpaRunsAPI.list(1, 99999);
+      setData(response?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load RPA runs');
       console.error('Error loading data:', err);
@@ -64,7 +39,6 @@ export default function RpaRuns() {
       setLoading(false);
     }
   };
-  */
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -112,50 +86,6 @@ export default function RpaRuns() {
     });
   };
 
-  // ========== DUMMY SUBMIT (CURRENTLY ACTIVE) ==========
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    if (editingItem) {
-      setData(data.map(item => 
-        item.id === editingItem.id 
-          ? {
-              ...item,
-              profile_id: parseInt(formData.profile_id),
-              facebook_account_id: parseInt(formData.facebook_account_id),
-              run_type: formData.run_type,
-              started_at: new Date(formData.started_at).toISOString(),
-              finished_at: formData.finished_at ? new Date(formData.finished_at).toISOString() : null,
-              status: formData.status,
-              error_message: formData.error_message || null,
-              meta: formData.meta,
-            }
-          : item
-      ));
-    } else {
-      const newItem = {
-        id: Date.now(),
-        profile_id: parseInt(formData.profile_id),
-        facebook_account_id: parseInt(formData.facebook_account_id),
-        run_type: formData.run_type,
-        started_at: new Date(formData.started_at).toISOString(),
-        finished_at: formData.finished_at ? new Date(formData.finished_at).toISOString() : null,
-        status: formData.status,
-        error_message: formData.error_message || null,
-        meta: formData.meta,
-        created_at: new Date().toISOString(),
-      };
-      setData([...data, newItem]);
-    }
-    
-    setSubmitting(false);
-    handleCloseModal();
-  };
-
-  // ========== API SUBMIT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -188,18 +118,7 @@ export default function RpaRuns() {
       setSubmitting(false);
     }
   };
-  */
 
-  // ========== DUMMY DELETE (CURRENTLY ACTIVE) ==========
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this RPA run?')) {
-      return;
-    }
-    setData(data.filter(item => item.id !== id));
-  };
-
-  // ========== API DELETE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this RPA run?')) {
       return;
@@ -214,7 +133,6 @@ export default function RpaRuns() {
       console.error('Error deleting data:', err);
     }
   };
-  */
 
   const filteredData = data.filter(item =>
     item.profile_id.toString().includes(searchTerm) ||
@@ -329,7 +247,9 @@ export default function RpaRuns() {
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          // className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          disabled
+                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

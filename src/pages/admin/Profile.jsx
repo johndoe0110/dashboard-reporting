@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { User, Lock, Save, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { adminAPI } from '../../services/api';
+import { adminAPI } from '../../services/api';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -17,33 +16,6 @@ export default function Profile() {
     confirmPassword: '',
   });
 
-  // ========== DUMMY LOAD PROFILE (CURRENTLY ACTIVE) ==========
-  useEffect(() => {
-    // Profile data already available from AuthContext
-    setLoading(false);
-  }, []);
-
-  // ========== API LOAD PROFILE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await adminAPI.getProfile();
-      // Update user data if needed
-    } catch (err) {
-      setError(err.message || 'Failed to load profile');
-      console.error('Error loading profile:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  */
-
   const handlePasswordChange = (e) => {
     setPasswordData({
       ...passwordData,
@@ -53,46 +25,6 @@ export default function Profile() {
     setSuccess('');
   };
 
-  // ========== DUMMY CHANGE PASSWORD (CURRENTLY ACTIVE) ==========
-  const handleChangePassword = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    setSuccess('');
-
-    // Validation
-    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setError('All fields are required');
-      setSubmitting(false);
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
-      setSubmitting(false);
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New password and confirm password do not match');
-      setSubmitting(false);
-      return;
-    }
-
-    // Simulate password change
-    setTimeout(() => {
-      setSuccess('Password changed successfully!');
-      setPasswordData({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setSubmitting(false);
-    }, 1000);
-  };
-
-  // ========== API CHANGE PASSWORD (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleChangePassword = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -133,7 +65,6 @@ export default function Profile() {
       setSubmitting(false);
     }
   };
-  */
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
@@ -169,11 +100,11 @@ export default function Profile() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Name
+                Phone Number
               </label>
               <input
                 type="text"
-                value={user?.name || ''}
+                value={user?.phone_number || ''}
                 disabled
                 className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-400 cursor-not-allowed"
               />
@@ -184,7 +115,7 @@ export default function Profile() {
               </label>
               <input
                 type="text"
-                value={user?.role || ''}
+                value={user?.role || '-'}
                 disabled
                 className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-400 cursor-not-allowed"
               />

@@ -1,29 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-// ========== API IMPORTS (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-// import { adSpendHourlyAPI } from '../../services/api';
-
-// ========== DUMMY DATA (CURRENTLY ACTIVE) ==========
-const initialDummyData = [
-  {
-    id: 3,
-    profile_id: 1,
-    facebook_account_id: 1,
-    ad_account_id: 'ad-acc-123',
-    spend_date: '2025-12-21T00:00:00.000Z',
-    spend_hour: 12,
-    spend_amount: 100.5,
-    time_range_start: '2025-12-21T00:00:00.000Z',
-    time_range_end: '2025-12-21T00:00:00.000Z',
-    raw_response: '{}',
-    created_at: '2026-01-07T14:31:55.000Z',
-    updated_at: '2026-01-07T14:31:55.000Z',
-  },
-];
+import { adSpendHourlyAPI } from '../../services/api';
 
 export default function AdSpendHourly() {
-  const [data, setData] = useState(initialDummyData);
+  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -32,7 +13,6 @@ export default function AdSpendHourly() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     profile_id: '',
-    facebook_account_id: '',
     ad_account_id: '',
     spend_date: '',
     spend_hour: '',
@@ -42,14 +22,6 @@ export default function AdSpendHourly() {
     raw_response: '{}',
   });
 
-  // ========== DUMMY LOAD DATA (CURRENTLY ACTIVE) ==========
-  const loadData = () => {
-    setLoading(false);
-    // Dummy data already loaded in initial state
-  };
-
-  // ========== API LOAD DATA (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   useEffect(() => {
     loadData();
   }, []);
@@ -58,8 +30,8 @@ export default function AdSpendHourly() {
     try {
       setLoading(true);
       setError('');
-      const response = await adSpendHourlyAPI.list();
-      setData(response.data || []);
+      const response = await adSpendHourlyAPI.list(1, 99999);
+      setData(response?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load ad spend records');
       console.error('Error loading data:', err);
@@ -67,14 +39,12 @@ export default function AdSpendHourly() {
       setLoading(false);
     }
   };
-  */
 
   const handleOpenModal = (item = null) => {
     if (item) {
       setEditingItem(item);
       setFormData({
         profile_id: item.profile_id.toString(),
-        facebook_account_id: item.facebook_account_id.toString(),
         ad_account_id: item.ad_account_id,
         spend_date: item.spend_date.split('T')[0],
         spend_hour: item.spend_hour.toString(),
@@ -88,7 +58,6 @@ export default function AdSpendHourly() {
       const today = new Date().toISOString().split('T')[0];
       setFormData({
         profile_id: '',
-        facebook_account_id: '',
         ad_account_id: '',
         spend_date: today,
         spend_hour: '',
@@ -107,7 +76,6 @@ export default function AdSpendHourly() {
     const today = new Date().toISOString().split('T')[0];
     setFormData({
       profile_id: '',
-      facebook_account_id: '',
       ad_account_id: '',
       spend_date: today,
       spend_hour: '',
@@ -118,54 +86,6 @@ export default function AdSpendHourly() {
     });
   };
 
-  // ========== DUMMY SUBMIT (CURRENTLY ACTIVE) ==========
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    if (editingItem) {
-      setData(data.map(item => 
-        item.id === editingItem.id 
-          ? {
-              ...item,
-              profile_id: parseInt(formData.profile_id),
-              facebook_account_id: parseInt(formData.facebook_account_id),
-              ad_account_id: formData.ad_account_id,
-              spend_date: new Date(formData.spend_date).toISOString(),
-              spend_hour: parseInt(formData.spend_hour),
-              spend_amount: parseFloat(formData.spend_amount),
-              time_range_start: new Date(formData.time_range_start).toISOString(),
-              time_range_end: new Date(formData.time_range_end).toISOString(),
-              raw_response: formData.raw_response,
-              updated_at: new Date().toISOString(),
-            }
-          : item
-      ));
-    } else {
-      const newItem = {
-        id: Date.now(),
-        profile_id: parseInt(formData.profile_id),
-        facebook_account_id: parseInt(formData.facebook_account_id),
-        ad_account_id: formData.ad_account_id,
-        spend_date: new Date(formData.spend_date).toISOString(),
-        spend_hour: parseInt(formData.spend_hour),
-        spend_amount: parseFloat(formData.spend_amount),
-        time_range_start: new Date(formData.time_range_start).toISOString(),
-        time_range_end: new Date(formData.time_range_end).toISOString(),
-        raw_response: formData.raw_response,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setData([...data, newItem]);
-    }
-    
-    setSubmitting(false);
-    handleCloseModal();
-  };
-
-  // ========== API SUBMIT (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -174,7 +94,6 @@ export default function AdSpendHourly() {
     try {
       const payload = {
         profile_id: parseInt(formData.profile_id),
-        facebook_account_id: parseInt(formData.facebook_account_id),
         ad_account_id: formData.ad_account_id,
         spend_date: formData.spend_date,
         spend_hour: parseInt(formData.spend_hour),
@@ -199,23 +118,11 @@ export default function AdSpendHourly() {
       setSubmitting(false);
     }
   };
-  */
 
-  // ========== DUMMY DELETE (CURRENTLY ACTIVE) ==========
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this ad spend record?')) {
-      return;
-    }
-    setData(data.filter(item => item.id !== id));
-  };
-
-  // ========== API DELETE (COMMENTED - UNCOMMENT WHEN CORS IS FIXED) ==========
-  /*
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this ad spend record?')) {
       return;
     }
-
     try {
       setError('');
       await adSpendHourlyAPI.delete(id);
@@ -225,18 +132,11 @@ export default function AdSpendHourly() {
       console.error('Error deleting data:', err);
     }
   };
-  */
 
   const filteredData = data.filter(item =>
     item.ad_account_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.profile_id.toString().includes(searchTerm) ||
-    item.facebook_account_id.toString().includes(searchTerm)
+    item.profile_id.toString().includes(searchTerm)
   );
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('id-ID');
-  };
 
   const formatDateOnly = (dateString) => {
     if (!dateString) return '-';
@@ -285,7 +185,6 @@ export default function AdSpendHourly() {
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Profile ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">FB Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Ad Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Spend Date</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Hour</th>
@@ -318,7 +217,6 @@ export default function AdSpendHourly() {
                   >
                     <td className="px-4 py-3 text-sm">{item.id}</td>
                     <td className="px-4 py-3 text-sm">{item.profile_id}</td>
-                    <td className="px-4 py-3 text-sm">{item.facebook_account_id}</td>
                     <td className="px-4 py-3 text-sm font-mono text-xs">{item.ad_account_id}</td>
                     <td className="px-4 py-3 text-sm">{formatDateOnly(item.spend_date)}</td>
                     <td className="px-4 py-3 text-sm text-center">{item.spend_hour}:00</td>
@@ -337,8 +235,10 @@ export default function AdSpendHourly() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDelete(item.id)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition"
+                          disabled
+                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -369,18 +269,6 @@ export default function AdSpendHourly() {
                     type="number"
                     value={formData.profile_id}
                     onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Facebook Account ID
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.facebook_account_id}
-                    onChange={(e) => setFormData({ ...formData, facebook_account_id: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
                   />
@@ -467,10 +355,14 @@ export default function AdSpendHourly() {
                 </label>
                 <textarea
                   value={formData.raw_response}
-                  onChange={(e) => setFormData({ ...formData, raw_response: e.target.value })}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-mono text-xs"
+                  readOnly={!!editingItem}
+                  disabled={!!editingItem}
+                  className={`w-full px-3 py-2 rounded-lg font-mono text-xs focus:outline-none focus:ring-2 ${
+                    editingItem
+                      ? 'bg-zinc-900 border border-zinc-800 text-gray-500 cursor-not-allowed'
+                      : 'bg-zinc-800 border border-zinc-700 text-gray-200 focus:ring-blue-500/50'
+                  }`}
                   rows="4"
-                  required
                 />
               </div>
               <div className="flex gap-3 pt-4">

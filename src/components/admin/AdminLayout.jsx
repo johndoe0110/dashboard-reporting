@@ -22,7 +22,9 @@ export default function AdminLayout() {
     <div className="h-screen bg-black text-gray-200 flex overflow-hidden">
       <Sidebar />
       
-      <div className="flex-1 lg:ml-64 flex flex-col min-w-0 overflow-hidden">
+      {/* Sidebar is `fixed` on mobile (out of flow) and `static` on desktop (in flow),
+          so we must NOT add extra left margin on desktop, otherwise content shifts too far right. */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <div className="border-b border-zinc-800 bg-zinc-900/50 flex-shrink-0 z-20">
           <div className="px-4 md:px-6 lg:px-8 py-4">
