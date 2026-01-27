@@ -153,9 +153,9 @@ export default function Login() {
                 Go to Dashboard
               </Link>
             </p>
-            <p className="text-xs text-gray-500 text-center">
+            {/* <p className="text-xs text-gray-500 text-center">
               Demo credentials: <span className="text-gray-400">admin</span> / <span className="text-gray-400">admin123</span>
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
