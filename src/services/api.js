@@ -268,3 +268,74 @@ export const profileAdAccountsAPI = {
     });
   },
 };
+
+// Brands API
+export const brandsAPI = {
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/brands/v1/list', page, limit));
+  },
+
+  getDetail: async (id) => {
+    return apiRequest(`/brands/v1/detail/${id}`);
+  },
+
+  create: async (data) => {
+    return apiRequest('/brands/v1/create', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id, data) => {
+    return apiRequest(`/brands/v1/update/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/brands/v1/delete/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+// Brand Daily Stats API
+export const brandDailyStatsAPI = {
+  list: async (page = 1, limit = 99999) => {
+    return apiRequest(withPageLimit('/brand-daily-stats/v1/list', page, limit));
+  },
+
+  getDetail: async (id) => {
+    return apiRequest(`/brand-daily-stats/v1/detail/${id}`);
+  },
+
+  getWithAdSpend: async (brandId, date) => {
+    const qs = new URLSearchParams();
+    if (brandId) qs.set('brand_id', String(brandId));
+    if (date) qs.set('date', date);
+    const queryString = qs.toString();
+    const endpoint = `/brand-daily-stats/v1/with-ad-spend${queryString ? `?${queryString}` : ''}`;
+    return apiRequest(endpoint);
+  },
+
+  create: async (data) => {
+    return apiRequest('/brand-daily-stats/v1/create', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id, data) => {
+    return apiRequest(`/brand-daily-stats/v1/update/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id) => {
+    return apiRequest(`/brand-daily-stats/v1/delete/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};

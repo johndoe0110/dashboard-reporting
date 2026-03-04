@@ -1,13 +1,15 @@
 import { NavLink } from 'react-router-dom';
-import { 
-  User, 
+import {
+  User,
   TrendingUp,
   Menu,
   X,
   PlayCircle,
   Settings,
   CreditCard,
-  UserCircle
+  UserCircle,
+  Tag,
+  BarChart2,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -31,6 +33,16 @@ const menuItems = [
     path: '/admin/rpa-runs',
     label: 'RPA Runs',
     icon: Settings,
+  },
+  {
+    path: '/admin/brand-daily-stats',
+    label: 'Brand Daily Stats',
+    icon: BarChart2,
+  },
+  {
+    path: '/admin/brands',
+    label: 'Brands',
+    icon: Tag,
   },
   {
     path: '/admin/profile-ad-accounts',

@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 // ========== API IMPORTS ==========
 import { profilesAPI } from '../../services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function Profiles() {
-  const [data, setData] = useState([]);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showPassword, setShowPassword] = useState({});
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -22,24 +22,22 @@ export default function Profiles() {
     fb_status: 'active',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const {
+    data: profilesResponse,
+    isLoading: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: () => profilesAPI.list(1, 99999),
+  });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      // Per Postman: { success, data: { list, ... } }
-      const response = await profilesAPI.list(1, 99999);
-      setData(response?.data?.list || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load profiles');
-      console.error('Error loading data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const data = profilesResponse?.data?.list || [];
+
+  if (queryError && !error) {
+    // Sync query error into existing UI state
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    setError(queryError.message || 'Failed to load profiles');
+  }
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -100,7 +98,7 @@ export default function Profiles() {
         await profilesAPI.create(payload);
       }
 
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
       handleCloseModal();
     } catch (err) {
       setError(err.message || 'Failed to save profile');
@@ -118,7 +116,7 @@ export default function Profiles() {
     try {
       setError('');
       await profilesAPI.delete(id);
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['profiles'] });
     } catch (err) {
       setError(err.message || 'Failed to delete profile');
       console.error('Error deleting data:', err);

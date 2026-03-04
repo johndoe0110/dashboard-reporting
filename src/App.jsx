@@ -9,6 +9,8 @@ import Profiles from './pages/admin/Profiles';
 import AdSpendHourly from './pages/admin/AdSpendHourly';
 import RpaRunAccounts from './pages/admin/RpaRunAccounts';
 import RpaRuns from './pages/admin/RpaRuns';
+import Brands from './pages/admin/Brands';
+import BrandDailyStats from './pages/admin/BrandDailyStats';
 import ProfileAdAccounts from './pages/admin/ProfileAdAccounts';
 import Profile from './pages/admin/Profile';
 
@@ -33,6 +35,8 @@ export default function App() {
             <Route path="ad-spend-hourly" element={<AdSpendHourly />} />
             <Route path="rpa-run-accounts" element={<RpaRunAccounts />} />
             <Route path="rpa-runs" element={<RpaRuns />} />
+            <Route path="brands" element={<Brands />} />
+            <Route path="brand-daily-stats" element={<BrandDailyStats />} />
             <Route path="profile-ad-accounts" element={<ProfileAdAccounts />} />
             <Route path="profile" element={<Profile />} />
           </Route>

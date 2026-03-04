@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-import { adSpendHourlyAPI } from '../../services/api';
+import { adSpendHourlyAPI, profileAdAccountsAPI } from '../../services/api';
 
 export default function AdSpendHourly() {
   const [data, setData] = useState([]);
@@ -11,8 +11,9 @@ export default function AdSpendHourly() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [profileAdAccounts, setProfileAdAccounts] = useState([]);
   const [formData, setFormData] = useState({
-    profile_id: '',
+    profile_ad_account_id: '',
     ad_account_id: '',
     spend_date: '',
     spend_hour: '',
@@ -30,8 +31,12 @@ export default function AdSpendHourly() {
     try {
       setLoading(true);
       setError('');
-      const response = await adSpendHourlyAPI.list(1, 99999);
-      setData(response?.data?.list || []);
+      const [spendRes, profileAdAccRes] = await Promise.all([
+        adSpendHourlyAPI.list(1, 99999),
+        profileAdAccountsAPI.list(1, 99999),
+      ]);
+      setData(spendRes?.data?.list || []);
+      setProfileAdAccounts(profileAdAccRes?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load ad spend records');
       console.error('Error loading data:', err);
@@ -44,7 +49,7 @@ export default function AdSpendHourly() {
     if (item) {
       setEditingItem(item);
       setFormData({
-        profile_id: item.profile_id.toString(),
+        profile_ad_account_id: item.profile_ad_account_id ? item.profile_ad_account_id.toString() : '',
         ad_account_id: item.ad_account_id,
         spend_date: item.spend_date.split('T')[0],
         spend_hour: item.spend_hour.toString(),
@@ -57,7 +62,7 @@ export default function AdSpendHourly() {
       setEditingItem(null);
       const today = new Date().toISOString().split('T')[0];
       setFormData({
-        profile_id: '',
+        profile_ad_account_id: '',
         ad_account_id: '',
         spend_date: today,
         spend_hour: '',
@@ -75,7 +80,7 @@ export default function AdSpendHourly() {
     setEditingItem(null);
     const today = new Date().toISOString().split('T')[0];
     setFormData({
-      profile_id: '',
+      profile_ad_account_id: '',
       ad_account_id: '',
       spend_date: today,
       spend_hour: '',
@@ -93,7 +98,7 @@ export default function AdSpendHourly() {
 
     try {
       const payload = {
-        profile_id: parseInt(formData.profile_id),
+        profile_ad_account_id: parseInt(formData.profile_ad_account_id),
         ad_account_id: formData.ad_account_id,
         spend_date: formData.spend_date,
         spend_hour: parseInt(formData.spend_hour),
@@ -135,7 +140,7 @@ export default function AdSpendHourly() {
 
   const filteredData = data.filter(item =>
     item.ad_account_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.profile_id.toString().includes(searchTerm)
+    (item.profile_ad_account_id && item.profile_ad_account_id.toString().includes(searchTerm))
   );
 
   const formatDateOnly = (dateString) => {
@@ -184,7 +189,7 @@ export default function AdSpendHourly() {
             <thead className="bg-zinc-800 text-gray-300">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Profile ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Profile Ad Account</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Ad Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Spend Date</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Hour</th>
@@ -216,7 +221,16 @@ export default function AdSpendHourly() {
                     className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
                   >
                     <td className="px-4 py-3 text-sm">{item.id}</td>
-                    <td className="px-4 py-3 text-sm">{item.profile_id}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {(() => {
+                        const paa = profileAdAccounts.find(
+                          (acc) => acc.id === item.profile_ad_account_id
+                        );
+                        return paa
+                          ? `${paa.account_name} (ID ${paa.id})`
+                          : item.profile_ad_account_id ?? '-';
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-sm font-mono text-xs">{item.ad_account_id}</td>
                     <td className="px-4 py-3 text-sm">{formatDateOnly(item.spend_date)}</td>
                     <td className="px-4 py-3 text-sm text-center">{item.spend_hour}:00</td>
@@ -233,14 +247,6 @@ export default function AdSpendHourly() {
                           className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded transition"
                         >
                           <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          disabled
-                          className="p-1.5 text-red-400/40 bg-red-500/10 rounded cursor-not-allowed"
-                        >
-                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -263,15 +269,31 @@ export default function AdSpendHourly() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Profile ID
+                    Profile Ad Account
                   </label>
-                  <input
-                    type="number"
-                    value={formData.profile_id}
-                    onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
+                  <select
+                    value={formData.profile_ad_account_id}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selected = profileAdAccounts.find(
+                        (acc) => acc.id === Number(selectedId)
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        profile_ad_account_id: selectedId,
+                        ad_account_id: selected ? selected.ad_account_id : prev.ad_account_id,
+                      }));
+                    }}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
-                  />
+                  >
+                    <option value="">Select Profile Ad Account</option>
+                    {profileAdAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.account_name} (ID {acc.id})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -280,7 +302,7 @@ export default function AdSpendHourly() {
                   <input
                     type="text"
                     value={formData.ad_account_id}
-                    onChange={(e) => setFormData({ ...formData, ad_account_id: e.target.value })}
+                    readOnly
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
                   />

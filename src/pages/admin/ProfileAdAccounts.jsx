@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
-import { profileAdAccountsAPI } from '../../services/api';
+import { profilesAPI, profileAdAccountsAPI, brandsAPI } from '../../services/api';
+import idrData from '../../../idr.json';
 
 export default function ProfileAdAccounts() {
   const [data, setData] = useState([]);
@@ -11,12 +12,14 @@ export default function ProfileAdAccounts() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [profiles, setProfiles] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [formData, setFormData] = useState({
     profile_id: '',
+    brand_id: '',
     ad_account_id: '',
     account_name: '',
-    currency: 'USD',
-    timezone: 'UTC',
+    currency: 'IDR',
     is_active: 1,
   });
 
@@ -28,8 +31,14 @@ export default function ProfileAdAccounts() {
     try {
       setLoading(true);
       setError('');
-      const response = await profileAdAccountsAPI.list(1, 99999);
-      setData(response?.data?.list || []);
+      const [adAccRes, profilesRes, brandsRes] = await Promise.all([
+        profileAdAccountsAPI.list(1, 99999),
+        profilesAPI.list(1, 99999),
+        brandsAPI.list(1, 99999),
+      ]);
+      setData(adAccRes?.data?.list || []);
+      setProfiles(profilesRes?.data?.list || []);
+      setBrands(brandsRes?.data?.list || []);
     } catch (err) {
       setError(err.message || 'Failed to load profile ad accounts');
       console.error('Error loading data:', err);
@@ -42,21 +51,21 @@ export default function ProfileAdAccounts() {
     if (item) {
       setEditingItem(item);
       setFormData({
-        profile_id: item.profile_id.toString(),
+        profile_id: item.profile_id ? item.profile_id.toString() : '',
+        brand_id: item.brand_id ? item.brand_id.toString() : '',
         ad_account_id: item.ad_account_id,
         account_name: item.account_name,
         currency: item.currency,
-        timezone: item.timezone,
         is_active: item.is_active,
       });
     } else {
       setEditingItem(null);
       setFormData({
         profile_id: '',
+        brand_id: '',
         ad_account_id: '',
         account_name: '',
-        currency: 'USD',
-        timezone: 'UTC',
+        currency: 'IDR',
         is_active: 1,
       });
     }
@@ -68,10 +77,10 @@ export default function ProfileAdAccounts() {
     setEditingItem(null);
     setFormData({
       profile_id: '',
+      brand_id: '',
       ad_account_id: '',
       account_name: '',
-      currency: 'USD',
-      timezone: 'UTC',
+      currency: 'IDR',
       is_active: 1,
     });
   };
@@ -84,10 +93,10 @@ export default function ProfileAdAccounts() {
     try {
       const payload = {
         profile_id: parseInt(formData.profile_id),
+        brand_id: parseInt(formData.brand_id),
         ad_account_id: formData.ad_account_id,
         account_name: formData.account_name,
         currency: formData.currency,
-        timezone: formData.timezone,
         is_active: parseInt(formData.is_active),
       };
 
@@ -125,7 +134,8 @@ export default function ProfileAdAccounts() {
   const filteredData = data.filter(item =>
     item.ad_account_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.account_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.profile_id.toString().includes(searchTerm)
+    item.profile_id.toString().includes(searchTerm) ||
+    (item.brand_id && item.brand_id.toString().includes(searchTerm))
   );
 
   const formatDate = (dateString) => {
@@ -133,8 +143,10 @@ export default function ProfileAdAccounts() {
     return new Date(dateString).toLocaleString('id-ID');
   };
 
-  const currencies = ['USD', 'IDR', 'EUR', 'GBP', 'JPY', 'CNY'];
-  const timezones = ['UTC', 'Asia/Jakarta', 'America/New_York', 'Europe/London', 'Asia/Tokyo'];
+  const currencies = Object.keys(idrData.idr || {}).sort();
+
+  const findProfileById = (id) => profiles.find((p) => p.id === id);
+  const findBrandById = (id) => brands.find((b) => b.id === id);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-full overflow-x-hidden">
@@ -173,15 +185,15 @@ export default function ProfileAdAccounts() {
         </div>
 
         <div className="overflow-x-auto max-w-full">
-          <table className="w-full min-w-[800px]">
+          <table className="w-full min-w-[900px]">
             <thead className="bg-zinc-800 text-gray-300">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Profile ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Profile</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Brand</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Ad Account ID</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Account Name</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Currency</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Timezone</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Status</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
               </tr>
@@ -209,11 +221,23 @@ export default function ProfileAdAccounts() {
                     className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
                   >
                     <td className="px-4 py-3 text-sm">{item.id}</td>
-                    <td className="px-4 py-3 text-sm">{item.profile_id}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {(() => {
+                        const profile = findProfileById(item.profile_id);
+                        return profile
+                          ? `${profile.adspower_profile_id} (ID ${profile.id})`
+                          : item.profile_id ?? '-';
+                      })()}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {(() => {
+                        const brand = findBrandById(item.brand_id);
+                        return brand ? `${brand.brand_name} (ID ${brand.id})` : item.brand_id ?? '-';
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-sm font-mono text-xs">{item.ad_account_id}</td>
                     <td className="px-4 py-3 text-sm">{item.account_name}</td>
                     <td className="px-4 py-3 text-sm">{item.currency}</td>
-                    <td className="px-4 py-3 text-sm">{item.timezone}</td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${
@@ -262,15 +286,39 @@ export default function ProfileAdAccounts() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Profile ID
+                    Profile
                   </label>
-                  <input
-                    type="number"
+                  <select
                     value={formData.profile_id}
                     onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     required
-                  />
+                  >
+                    <option value="">Select Profile</option>
+                    {profiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.adspower_profile_id} (ID {profile.id})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Brand
+                  </label>
+                  <select
+                    value={formData.brand_id}
+                    onChange={(e) => setFormData({ ...formData, brand_id: e.target.value })}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    required
+                  >
+                    <option value="">Select Brand</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.brand_name} (ID {brand.id})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -307,20 +355,6 @@ export default function ProfileAdAccounts() {
                   >
                     {currencies.map(currency => (
                       <option key={currency} value={currency}>{currency}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Timezone
-                  </label>
-                  <select
-                    value={formData.timezone}
-                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                  >
-                    {timezones.map(tz => (
-                      <option key={tz} value={tz}>{tz}</option>
                     ))}
                   </select>
                 </div>
