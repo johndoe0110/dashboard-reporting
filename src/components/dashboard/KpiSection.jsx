@@ -17,7 +17,7 @@ export default function KpiSection({ summary, loading }) {
   const diffDailyAdSpend = s.totalDiffAdSpent ?? 0;
   const newReg = s.newRegistrations ?? 0;
   const newDepo = s.newDeposits ?? 0;
-  const redepo = s.redepoTotalForm + newDepo || s.redepositCount || 0;
+  const redepo = s.redepositCount ?? 0;
   const totalDepo = s.totalDeposits ?? 0;
   const totalNewDepoAmount = s.revenue ?? 0;
 

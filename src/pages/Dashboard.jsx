@@ -3,10 +3,7 @@ import { useDatePicker } from '../hooks/useDatePicker';
 import Header from '../components/dashboard/Header';
 import RoasAlert from '../components/dashboard/RoasAlert';
 import KpiSection from '../components/dashboard/KpiSection';
-import BusinessMetrics from '../components/dashboard/BusinessMetrics';
-import SecondaryMetrics from '../components/dashboard/SecondaryMetrics';
 import CampaignTable from '../components/dashboard/CampaignTable';
-import AdSpendCards from '../components/dashboard/AdSpendCards';
 import { brandDailyStatsAPI, brandsAPI } from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 
@@ -74,6 +71,7 @@ function computeMetricsFromData(row) {
 export default function Dashboard() {
   const { selectedDate, setSelectedDate, wgToday, isToday } = useDatePicker(null);
   const [selectedBrandId, setSelectedBrandId] = useState('');
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const dateStr = useMemo(() => {
     if (!selectedDate) return '';
@@ -81,30 +79,42 @@ export default function Dashboard() {
     return d.toISOString().split('T')[0];
   }, [selectedDate]);
 
-  const hasFilters = !!selectedBrandId && !!dateStr;
   const brandIdNum = selectedBrandId ? Number(selectedBrandId) : undefined;
+  const hasFilters = !!brandIdNum && !!dateStr;
 
   const { data: brandsRes } = useQuery({
     queryKey: ['brands'],
     queryFn: () => brandsAPI.list(1, 99999),
   });
 
-  const { data: withAdSpendRes, isLoading: loadingWithAdSpend } = useQuery({
+  const {
+    data: withAdSpendRes,
+    isFetching: loadingWithAdSpend,
+    refetch: refetchWithAdSpend,
+  } = useQuery({
     queryKey: ['brand-daily-stats-with-ad-spend', brandIdNum, dateStr],
     queryFn: () => brandDailyStatsAPI.getWithAdSpend(brandIdNum, dateStr),
-    enabled: hasFilters,
+    enabled: false,
   });
 
   const brands = brandsRes?.data?.list ?? [];
-  // API returns a single object in `data`
-  const apiData = withAdSpendRes?.data ?? null;
-
-  // Normalize both naming variants just in case
-  const totalAdSpend = apiData?.total_ad_spent ?? apiData?.totalAdSpent ?? apiData?.total_ad_spend ?? 0;
-  const totalDiffAdSpent = apiData?.total_diff_ad_spent ?? apiData?.totalDiffAdSpent ?? 0;
-  const totalDailyAdSpend = Number(totalAdSpend) + Number(totalDiffAdSpent);
+  const envelope = withAdSpendRes ?? null;
+  const isOk = envelope?.success === true && envelope?.code === 200;
+  const apiData = isOk ? (envelope?.data ?? null) : null;
 
   const summary = useMemo(() => computeMetricsFromData(apiData), [apiData]);
+
+  const handleLoad = () => {
+    if (!hasFilters) return;
+    setHasLoaded(true);
+    refetchWithAdSpend();
+  };
+
+  const showErrorBox =
+    hasLoaded &&
+    !loadingWithAdSpend &&
+    envelope &&
+    (envelope.success !== true || envelope.code !== 200);
 
   return (
     <div className="min-h-screen bg-black text-gray-200">
@@ -114,18 +124,25 @@ export default function Dashboard() {
         selectedBrandId={selectedBrandId}
         setSelectedBrandId={setSelectedBrandId}
         brands={brands}
+        onLoad={handleLoad}
         wgToday={wgToday}
         isToday={isToday}
       />
 
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
-        {!hasFilters ? (
+        {!hasLoaded ? (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 md:p-12 text-center">
             <p className="text-gray-400 text-sm md:text-base">
-              Pilih <strong className="text-gray-300">brand</strong> dan <strong className="text-gray-300">tanggal</strong> untuk menampilkan data.
+              Pilih <strong className="text-gray-300">brand</strong> dan <strong className="text-gray-300">tanggal</strong>, lalu klik <strong className="text-gray-300">Load</strong> untuk menampilkan data.
+            </p>
+          </div>
+        ) : showErrorBox ? (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-5 text-center">
+            <p className="text-gray-400 text-sm md:text-base">
+              {envelope?.message || 'Data tidak ditemukan untuk kombinasi brand dan tanggal tersebut.'}
             </p>
             <p className="text-gray-500 text-xs mt-2">
-              Gunakan dropdown Brand dan Date di atas.
+              Silakan pilih ulang brand & tanggal, lalu klik Load.
             </p>
           </div>
         ) : (
@@ -135,20 +152,9 @@ export default function Dashboard() {
               targetRoas={2.0}
             />
 
-            <AdSpendCards
-              totalDailyAdSpend={totalDailyAdSpend}
-              dailyAdSpend={Number(totalAdSpend)}
-              differenceDailyAdSpent={Number(totalDiffAdSpent)}
-              loading={loadingWithAdSpend}
-            />
-
             <KpiSection summary={summary} loading={loadingWithAdSpend} />
 
-            <BusinessMetrics summary={summary} loading={loadingWithAdSpend} />
-
-            <SecondaryMetrics />
-
-            <CampaignTable selectedDate={selectedDate} />
+            <CampaignTable brandId={brandIdNum} spendDate={dateStr} enabled={hasLoaded && hasFilters} />
           </>
         )}
       </div>

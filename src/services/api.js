@@ -47,6 +47,44 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+// Same as apiRequest, but returns JSON even on non-2xx (except 401).
+// Used on dashboard screens that need to show API message/code (e.g. 404 Data not found).
+const apiRequestNoThrow = async (endpoint, options = {}) => {
+  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+  };
+
+  const token = getAuthToken();
+  if (token) {
+    defaultHeaders['Authorization'] = getBearerAuthHeader();
+  }
+
+  const config = {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  };
+
+  const response = await fetch(url, config);
+  const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    removeAuthToken();
+    if (typeof window !== 'undefined' && window.__onUnauthorized) {
+      window.__onUnauthorized();
+    } else {
+      window.location.href = '/login';
+    }
+    throw new Error(data.message || 'Session expired. Please login again.');
+  }
+
+  return { ...data, __httpStatus: response.status, __ok: response.ok };
+};
+
 const withPageLimit = (path, page = 1, limit = 99999) => {
   const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
   return `${path}?${qs.toString()}`;
@@ -160,8 +198,18 @@ export const adSpendHourlyAPI = {
   list: async (page = 1, limit = 99999, filters = {}) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (filters.ad_account_id) params.set('ad_account_id', String(filters.ad_account_id));
+    if (filters.brand_id) params.set('brand_id', String(filters.brand_id));
     if (filters.spend_date) params.set('spend_date', String(filters.spend_date));
     return apiRequest(`/ad-spend-hourly/v1/list?${params.toString()}`);
+  },
+
+  // Dashboard: return API envelope even on non-2xx (except 401)
+  listNoThrow: async (page = 1, limit = 99999, filters = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filters.brand_id) params.set('brand_id', String(filters.brand_id));
+    if (filters.spend_date) params.set('spend_date', String(filters.spend_date));
+    if (filters.ad_account_id) params.set('ad_account_id', String(filters.ad_account_id));
+    return apiRequestNoThrow(`/ad-spend-hourly/v1/list?${params.toString()}`);
   },
 
   getDetail: async (id) => {
@@ -329,7 +377,7 @@ export const brandDailyStatsAPI = {
     if (date) qs.set('date', date);
     const queryString = qs.toString();
     const endpoint = `/brand-daily-stats/v1/with-ad-spend${queryString ? `?${queryString}` : ''}`;
-    return apiRequest(endpoint);
+    return apiRequestNoThrow(endpoint);
   },
 
   create: async (data) => {

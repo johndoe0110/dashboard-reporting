@@ -1,235 +1,119 @@
+import { useQuery } from '@tanstack/react-query';
+import { adSpendHourlyAPI } from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
 
-const mockTikTokCampaigns = [
-  {
-    id: 1,
-    name: '24NOV_GTT_BAJU31',
-    adAccount: 'GTT-18',
-    status: 'Active',
-    budget: 1000000,
-    spent: 571920,
-    cpr: 114384,
-    leads: 5,
-  },
-  {
-    id: 2,
-    name: '24NOV_GTT_BAJU32',
-    adAccount: 'GTT-02',
-    status: 'Active',
-    budget: 1000000,
-    spent: 860167,
-    cpr: 215042,
-    leads: 4,
-  },
-  {
-    id: 3,
-    name: '24NOV_GTT_BAJU36',
-    adAccount: 'GTT-23',
-    status: 'Active',
-    budget: 1000000,
-    spent: 827638,
-    cpr: 63664,
-    leads: 13,
-  },
-  {
-    id: 4,
-    name: '24NOV_GTT_BAJU38',
-    adAccount: 'GTT-19',
-    status: 'Off',
-    budget: 1000000,
-    spent: 1354,
-    cpr: 0,
-    leads: 0,
-  },
-  {
-    id: 5,
-    name: '24NOV_GTT_BAJU31',
-    adAccount: 'GTT-18',
-    status: 'Off',
-    budget: 1000000,
-    spent: 0,
-    cpr: 0,
-    leads: 0,
-  },
-  {
-    id: 6,
-    name: '24NOV_GTT_BAJU33',
-    adAccount: 'GTT-19',
-    status: 'Off',
-    budget: 1000000,
-    spent: 575318,
-    cpr: 191773,
-    leads: 3,
-  },
-  {
-    id: 7,
-    name: '24NOV_GTT_BAJU30',
-    adAccount: 'GTT-02',
-    status: 'Off',
-    budget: 1000000,
-    spent: 574151,
-    cpr: 287076,
-    leads: 2,
-  },
-  {
-    id: 8,
-    name: '24NOV_GTT_BAJU35',
-    adAccount: 'GTT-18',
-    status: 'Off',
-    budget: 1000000,
-    spent: 10485,
-    cpr: 5243,
-    leads: 2,
-  },
-];
+export default function CampaignTable({ brandId, spendDate, enabled }) {
+  const hasFilters = !!brandId && !!spendDate && !!enabled;
 
-function StatusBadge({ status }) {
-  const isActive = status === 'Active';
-  return (
-    <span
-      className={`px-2 py-1 rounded text-xs font-medium ${
-        isActive
-          ? 'bg-green-600/20 text-green-400'
-          : 'bg-red-600/20 text-red-400'
-      }`}
-    >
-      {status}
-    </span>
-  );
-}
+  const { data: res, isLoading, error } = useQuery({
+    queryKey: ['ad-spend-hourly-dashboard', brandId, spendDate],
+    queryFn: () =>
+      adSpendHourlyAPI.listNoThrow(1, 99999, {
+        brand_id: brandId,
+        spend_date: spendDate,
+      }),
+    enabled: hasFilters,
+  });
 
-function CampaignTableSection({ title, campaigns, date }) {
-  if (!campaigns || campaigns.length === 0) {
+  const envelope = res ?? null;
+  const isOk = envelope?.success === true && envelope?.code === 200;
+  const rows = isOk ? (envelope?.data?.list ?? []) : [];
+
+  if (!enabled) {
     return (
-      <div className="bg-zinc-900 rounded-xl border border-zinc-800">
-        <div className="px-4 py-3 border-b border-zinc-800">
-          <h2 className="text-sm font-semibold">{title}</h2>
-        </div>
-        <div className="px-4 py-8 text-center text-gray-400 text-sm">
-          No {title.toLowerCase()} found for {date}
-        </div>
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 text-center text-gray-400 text-sm">
+        Pilih brand & tanggal lalu klik Load untuk melihat Ad Spend Hourly.
       </div>
     );
   }
 
-  const activeCount = campaigns.filter((c) => c.status === 'Active').length;
-  const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);
-  const totalSpent = campaigns.reduce((sum, c) => sum + c.spent, 0);
-  const totalLeads = campaigns.reduce((sum, c) => sum + c.leads, 0);
-  const avgCpr = totalLeads > 0 ? totalSpent / totalLeads : 0;
-  const uniqueAccounts = new Set(campaigns.map((c) => c.adAccount)).size;
-  const todayBudget = 5000000;
-  const budgetLeft = todayBudget - totalSpent;
+  if (error) {
+    return (
+      <div className="bg-zinc-900 rounded-xl border border-red-800 p-4 text-center text-red-400 text-sm">
+        {error.message || 'Gagal memuat Ad Spend Hourly.'}
+      </div>
+    );
+  }
+
+  if (envelope && !isOk) {
+    return (
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 text-center text-gray-400 text-sm">
+        {envelope.message || 'Data Ad Spend Hourly tidak tersedia.'}
+      </div>
+    );
+  }
+
+  if (!isLoading && rows.length === 0) {
+    return (
+      <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4 text-center text-gray-400 text-sm">
+        Tidak ada data Ad Spend Hourly untuk tanggal tersebut.
+      </div>
+    );
+  }
 
   return (
     <div className="bg-zinc-900 rounded-xl border border-zinc-800">
       <div className="px-4 py-3 border-b border-zinc-800">
-        <h2 className="text-sm font-semibold">{title}</h2>
+        <h2 className="text-sm font-semibold text-gray-200">Ad Spend Hourly</h2>
       </div>
-
       <div className="overflow-x-auto">
-        <table className="min-w-[900px] w-full text-xs">
+        <table className="min-w-[1100px] w-full text-xs">
           <thead className="bg-zinc-800 text-gray-300">
             <tr>
-              <th className="px-3 py-2 text-left">Campaign Name</th>
-              <th className="px-3 py-2 text-left">Ad Account</th>
-              <th className="px-3 py-2 text-center">Status</th>
-              <th className="px-3 py-2 text-right">Budget (IDR)</th>
-              <th className="px-3 py-2 text-right">Spent (IDR)</th>
-              <th className="px-3 py-2 text-right">CPR (IDR)</th>
-              <th className="px-3 py-2 text-right">Leads</th>
+              <th className="px-3 py-2 text-left">ID</th>
+              <th className="px-3 py-2 text-left">Ad Account ID</th>
+              <th className="px-3 py-2 text-left">Spend Date</th>
+              <th className="px-3 py-2 text-center">Hour</th>
+              <th className="px-3 py-2 text-right">Spend Amount</th>
+              <th className="px-3 py-2 text-right">Diff Spend</th>
+              <th className="px-3 py-2 text-right">Impression</th>
+              <th className="px-3 py-2 text-left">Raw Response Diff</th>
             </tr>
           </thead>
-
           <tbody>
-            {campaigns.map((campaign) => (
-              <tr
-                key={campaign.id}
-                className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
-              >
-                <td className="px-3 py-2 text-gray-300">{campaign.name}</td>
-                <td className="px-3 py-2 text-gray-400">{campaign.adAccount}</td>
-                <td className="px-3 py-2 text-center">
-                  <StatusBadge status={campaign.status} />
-                </td>
-                <td className="px-3 py-2 text-right text-gray-300">
-                  {formatCurrency(campaign.budget)}
-                </td>
-                <td className="px-3 py-2 text-right text-gray-300">
-                  {formatCurrency(campaign.spent)}
-                </td>
-              <td className="px-3 py-2 text-right text-gray-300">
-                {campaign.cpr > 0 ? formatCurrency(campaign.cpr) : 'Rp 0'}
-              </td>
-                <td className="px-3 py-2 text-right text-gray-300">
-                  {campaign.leads}
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="px-3 py-6 text-center text-gray-400">
+                  Loading...
                 </td>
               </tr>
-            ))}
-
-            {/* Summary Row */}
-            <tr className="bg-zinc-800/50 font-semibold">
-              <td className="px-3 py-2 text-gray-200">
-                TOTAL ({campaigns.length} campaigns, {activeCount} Active, {campaigns.length - activeCount} Off)
-              </td>
-              <td className="px-3 py-2 text-gray-400">
-                {uniqueAccounts} Accounts
-              </td>
-              <td className="px-3 py-2"></td>
-              <td className="px-3 py-2 text-right text-gray-200">
-                {formatCurrency(totalBudget)}
-              </td>
-              <td className="px-3 py-2 text-right text-gray-200">
-                {formatCurrency(totalSpent)}
-              </td>
-              <td className="px-3 py-2 text-right text-gray-200">
-                {formatCurrency(avgCpr)}
-              </td>
-              <td className="px-3 py-2 text-right text-gray-200">
-                {totalLeads}
-              </td>
-            </tr>
-
-            {/* Today Budget Row */}
-            <tr className="bg-zinc-800/30">
-              <td className="px-3 py-2 text-gray-300 font-medium">TODAY BUDGET</td>
-              <td className="px-3 py-2"></td>
-              <td className="px-3 py-2"></td>
-              <td className="px-3 py-2 text-right text-gray-300">
-                {formatCurrency(todayBudget)}
-              </td>
-              <td className="px-3 py-2 text-right text-gray-300">
-                {formatCurrency(budgetLeft)} (Left)
-              </td>
-              <td className="px-3 py-2"></td>
-              <td className="px-3 py-2"></td>
-            </tr>
+            ) : (
+              rows.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
+                >
+                  <td className="px-3 py-2 text-gray-300">{item.id}</td>
+                  <td className="px-3 py-2 text-gray-300 font-mono">{item.ad_account_id}</td>
+                  <td className="px-3 py-2 text-gray-300">
+                    {item.spend_date
+                      ? new Date(item.spend_date).toLocaleDateString('id-ID')
+                      : '-'}
+                  </td>
+                  <td className="px-3 py-2 text-center text-gray-300">
+                    {item.spend_hour}:00
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-300">
+                    {formatCurrency(Number(item.spend_amount || 0))}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-300">
+                    {formatCurrency(Number(item.diff_spend_amount || 0))}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-300">
+                    {item.impression != null ? Number(item.impression).toLocaleString('id-ID') : '-'}
+                  </td>
+                  <td
+                    className="px-3 py-2 text-gray-500 max-w-[260px] truncate"
+                    title={item.raw_response_diff != null ? String(item.raw_response_diff) : ''}
+                  >
+                    {item.raw_response_diff != null ? String(item.raw_response_diff) : '—'}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-export default function CampaignTable({ selectedDate = new Date() }) {
-  const dateStr = new Date(selectedDate).toLocaleDateString('en-US', {
-    month: '2-digit',
-    day: '2-digit',
-    year: 'numeric',
-  });
-
-  return (
-    <div className="space-y-4">
-      <CampaignTableSection
-        title="Facebook Campaigns"
-        campaigns={[]}
-        date={dateStr}
-      />
-      <CampaignTableSection
-        title="TikTok Campaigns"
-        campaigns={mockTikTokCampaigns}
-        date={dateStr}
-      />
     </div>
   );
 }
