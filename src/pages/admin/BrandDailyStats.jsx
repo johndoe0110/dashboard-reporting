@@ -251,8 +251,6 @@ export default function BrandDailyStats() {
                 <th className="px-4 py-3 text-center text-sm font-semibold">Redepo</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Total Depo</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Total New Depo</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold">Difference</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -283,12 +281,6 @@ export default function BrandDailyStats() {
                     <td className="px-4 py-3 text-sm text-right">{row.redeposit_count}</td>
                     <td className="px-4 py-3 text-sm text-right">{formatCurrency(Number(row.total_deposit_amount || 0))}</td>
                     <td className="px-4 py-3 text-sm text-right">{formatCurrency(Number(row.total_new_deposit_amount || 0))}</td>
-                    <td className="px-4 py-3 text-sm text-right">
-                      {formatRpTwoDecimals(Number(row.total_ad_spent ?? row.total_ad_spent_amount ?? 0))}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right">
-                      {formatRpTwoDecimals(Number(row.difference ?? 0))}
-                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => openDetail(row.id)} className="p-1.5 text-gray-400 hover:bg-zinc-700 rounded" title="Detail">
@@ -398,7 +390,6 @@ export default function BrandDailyStats() {
                 <p><span className="text-gray-400">Redepo:</span> {detail.redeposit_count}</p>
                 <p><span className="text-gray-400">Total Depo:</span> {formatCurrency(Number(detail.total_deposit_amount || 0))}</p>
                 <p><span className="text-gray-400">Total New Depo:</span> {formatCurrency(Number(detail.total_new_deposit_amount || 0))}</p>
-                <p><span className="text-gray-400">Difference:</span> {formatRpTwoDecimals(Number(detail.difference ?? 0))}</p>
               </div>
             ) : null}
             <div className="flex gap-3 mt-6">
