@@ -5,7 +5,16 @@ import { useAuth } from '../../contexts/AuthContext';
 import DatePicker from '../common/DatePicker';
 import Button from '../common/Button';
 
-export default function Header({ selectedDate, setSelectedDate, wgToday, isToday }) {
+export default function Header({
+  selectedDate,
+  setSelectedDate,
+  selectedBrandId,
+  setSelectedBrandId,
+  brands = [],
+  wgToday,
+  isToday,
+  onLoad,
+}) {
   const { time } = useDateTime();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -84,7 +93,7 @@ export default function Header({ selectedDate, setSelectedDate, wgToday, isToday
         </div>
       </div>
 
-      {/* Row 2: Live Time and Date Picker */}
+      {/* Row 2: Live Time, Brand filter, and Date Picker */}
       <div className="flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <p className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
@@ -94,15 +103,43 @@ export default function Header({ selectedDate, setSelectedDate, wgToday, isToday
             {time}
           </span>
         </div>
-        
-        <div className="flex items-center gap-2 flex-1 sm:flex-initial min-w-0">
-          <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap hidden sm:inline">Select Date:</span>
-          <DatePicker
-            date={selectedDate}
-            onChange={setSelectedDate}
-            onTodayClick={wgToday}
-            isToday={isToday}
-          />
+
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap flex-1 sm:flex-initial min-w-0">
+          {setSelectedBrandId && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap hidden sm:inline">Brand:</span>
+              <select
+                value={selectedBrandId ?? ''}
+                onChange={(e) => setSelectedBrandId(e.target.value)}
+                className="px-3 py-1.5 md:py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-xs md:text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 min-w-0 max-w-[180px] md:max-w-[220px]"
+              >
+                <option value="">Pilih brand</option>
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.brand_name ?? b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial min-w-0">
+            <span className="text-xs md:text-sm text-gray-400 whitespace-nowrap hidden sm:inline">Select Date:</span>
+            <DatePicker
+              date={selectedDate}
+              onChange={setSelectedDate}
+              onTodayClick={wgToday}
+              isToday={isToday}
+            />
+            {onLoad && (
+              <Button
+                variant="primary"
+                onClick={onLoad}
+                className="text-[9px] sm:text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 whitespace-nowrap"
+              >
+                Load
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

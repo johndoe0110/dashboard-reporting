@@ -1,19 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit, Trash2, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { profilesAPI, profileAdAccountsAPI, brandsAPI } from '../../services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import idrData from '../../../idr.json';
 
 export default function ProfileAdAccounts() {
-  const [data, setData] = useState([]);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [profiles, setProfiles] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [formData, setFormData] = useState({
     profile_id: '',
     brand_id: '',
@@ -23,29 +21,24 @@ export default function ProfileAdAccounts() {
     is_active: 1,
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: adAccRes, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['profile-ad-accounts'],
+    queryFn: () => profileAdAccountsAPI.list(1, 99999),
+  });
+  const { data: profilesRes } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: () => profilesAPI.list(1, 99999),
+  });
+  const { data: brandsRes } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsAPI.list(1, 99999),
+  });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const [adAccRes, profilesRes, brandsRes] = await Promise.all([
-        profileAdAccountsAPI.list(1, 99999),
-        profilesAPI.list(1, 99999),
-        brandsAPI.list(1, 99999),
-      ]);
-      setData(adAccRes?.data?.list || []);
-      setProfiles(profilesRes?.data?.list || []);
-      setBrands(brandsRes?.data?.list || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load profile ad accounts');
-      console.error('Error loading data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const data = adAccRes?.data?.list || [];
+  const profiles = profilesRes?.data?.list || [];
+  const brands = brandsRes?.data?.list || [];
+
+  const displayError = error || (queryError ? (queryError.message || 'Failed to load profile ad accounts') : '');
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -106,7 +99,7 @@ export default function ProfileAdAccounts() {
         await profileAdAccountsAPI.create(payload);
       }
 
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['profile-ad-accounts'] });
       handleCloseModal();
     } catch (err) {
       setError(err.message || 'Failed to save profile ad account');
@@ -124,7 +117,7 @@ export default function ProfileAdAccounts() {
     try {
       setError('');
       await profileAdAccountsAPI.delete(id);
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['profile-ad-accounts'] });
     } catch (err) {
       setError(err.message || 'Failed to delete profile ad account');
       console.error('Error deleting data:', err);
@@ -153,9 +146,9 @@ export default function ProfileAdAccounts() {
       <div className="mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2">Profile Ad Accounts</h1>
         <p className="text-sm sm:text-base text-gray-400 break-words">Manage profile ad account configurations</p>
-        {error && (
+        {displayError && (
           <div className="mt-4 bg-red-500/10 border border-red-500/40 rounded-lg p-3">
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-400 text-sm">{displayError}</p>
           </div>
         )}
       </div>

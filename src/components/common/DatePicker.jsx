@@ -1,12 +1,13 @@
 import { formatDateShort } from '../../utils/dateUtils';
 
 export default function DatePicker({ date, onChange, onTodayClick, isToday }) {
+  const value = date ? date.toISOString().split('T')[0] : '';
   return (
     <div className="flex items-center gap-1.5 md:gap-2">
       <input
         type="date"
-        value={date.toISOString().split('T')[0]}
-        onChange={(e) => onChange(new Date(e.target.value))}
+        value={value}
+        onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
         className="
           bg-zinc-900 
           border border-zinc-700 

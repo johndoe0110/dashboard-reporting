@@ -24,7 +24,17 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
+
+    if (response.status === 401) {
+      removeAuthToken();
+      if (typeof window !== 'undefined' && window.__onUnauthorized) {
+        window.__onUnauthorized();
+      } else {
+        window.location.href = '/login';
+      }
+      throw new Error(data.message || 'Session expired. Please login again.');
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `HTTP error! status: ${response.status}`);
@@ -147,8 +157,11 @@ export const profilesAPI = {
 
 // Ad Spend Hourly API
 export const adSpendHourlyAPI = {
-  list: async (page = 1, limit = 99999) => {
-    return apiRequest(withPageLimit('/ad-spend-hourly/v1/list', page, limit));
+  list: async (page = 1, limit = 99999, filters = {}) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (filters.ad_account_id) params.set('ad_account_id', String(filters.ad_account_id));
+    if (filters.spend_date) params.set('spend_date', String(filters.spend_date));
+    return apiRequest(`/ad-spend-hourly/v1/list?${params.toString()}`);
   },
 
   getDetail: async (id) => {

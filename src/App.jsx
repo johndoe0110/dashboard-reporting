@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import UnauthorizedHandler from './components/common/UnauthorizedHandler';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <UnauthorizedHandler />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

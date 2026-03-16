@@ -32,12 +32,7 @@ export default function Profiles() {
   });
 
   const data = profilesResponse?.data?.list || [];
-
-  if (queryError && !error) {
-    // Sync query error into existing UI state
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    setError(queryError.message || 'Failed to load profiles');
-  }
+  const displayError = error || (queryError ? (queryError.message || 'Failed to load profiles') : '');
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -140,9 +135,9 @@ export default function Profiles() {
       <div className="mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2">Profiles</h1>
         <p className="text-sm sm:text-base text-gray-400 break-words">Manage profiles and Facebook credentials</p>
-        {error && (
+        {displayError && (
           <div className="mt-4 bg-red-500/10 border border-red-500/40 rounded-lg p-3">
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-400 text-sm">{displayError}</p>
           </div>
         )}
       </div>

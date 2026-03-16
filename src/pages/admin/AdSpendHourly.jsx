@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Edit, Search, Loader2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { adSpendHourlyAPI, profileAdAccountsAPI } from '../../services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { formatRpTwoDecimals } from '../../utils/formatters';
 
 export default function AdSpendHourly() {
-  const [data, setData] = useState([]);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterAdAccountId, setFilterAdAccountId] = useState('');
+  const [filterSpendDate, setFilterSpendDate] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [profileAdAccounts, setProfileAdAccounts] = useState([]);
   const [formData, setFormData] = useState({
     profile_ad_account_id: '',
     ad_account_id: '',
@@ -23,27 +25,23 @@ export default function AdSpendHourly() {
     raw_response: '{}',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const [spendRes, profileAdAccRes] = await Promise.all([
-        adSpendHourlyAPI.list(1, 99999),
-        profileAdAccountsAPI.list(1, 99999),
-      ]);
-      setData(spendRes?.data?.list || []);
-      setProfileAdAccounts(profileAdAccRes?.data?.list || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load ad spend records');
-      console.error('Error loading data:', err);
-    } finally {
-      setLoading(false);
-    }
+  const listFilters = {
+    ...(filterAdAccountId && { ad_account_id: filterAdAccountId }),
+    ...(filterSpendDate && { spend_date: filterSpendDate }),
   };
+
+  const { data: spendResponse, isLoading: loading } = useQuery({
+    queryKey: ['ad-spend-hourly', listFilters],
+    queryFn: () => adSpendHourlyAPI.list(1, 99999, listFilters),
+  });
+
+  const { data: profileAdAccResponse } = useQuery({
+    queryKey: ['profile-ad-accounts'],
+    queryFn: () => profileAdAccountsAPI.list(1, 99999),
+  });
+
+  const data = spendResponse?.data?.list || [];
+  const profileAdAccounts = profileAdAccResponse?.data?.list || [];
 
   const handleOpenModal = (item = null) => {
     if (item) {
@@ -51,12 +49,12 @@ export default function AdSpendHourly() {
       setFormData({
         profile_ad_account_id: item.profile_ad_account_id ? item.profile_ad_account_id.toString() : '',
         ad_account_id: item.ad_account_id,
-        spend_date: item.spend_date.split('T')[0],
-        spend_hour: item.spend_hour.toString(),
-        spend_amount: item.spend_amount.toString(),
-        time_range_start: item.time_range_start.split('T')[0],
-        time_range_end: item.time_range_end.split('T')[0],
-        raw_response: item.raw_response,
+        spend_date: item.spend_date?.split?.('T')[0] ?? '',
+        spend_hour: item.spend_hour?.toString() ?? '',
+        spend_amount: item.spend_amount?.toString() ?? '',
+        time_range_start: item.time_range_start?.split?.('T')[0] ?? '',
+        time_range_end: item.time_range_end?.split?.('T')[0] ?? '',
+        raw_response: item.raw_response ?? '{}',
       });
     } else {
       setEditingItem(null);
@@ -114,7 +112,7 @@ export default function AdSpendHourly() {
         await adSpendHourlyAPI.create(payload);
       }
 
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['ad-spend-hourly'] });
       handleCloseModal();
     } catch (err) {
       setError(err.message || 'Failed to save ad spend record');
@@ -131,7 +129,7 @@ export default function AdSpendHourly() {
     try {
       setError('');
       await adSpendHourlyAPI.delete(id);
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['ad-spend-hourly'] });
     } catch (err) {
       setError(err.message || 'Failed to delete ad spend record');
       console.error('Error deleting data:', err);
@@ -139,7 +137,7 @@ export default function AdSpendHourly() {
   };
 
   const filteredData = data.filter(item =>
-    item.ad_account_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.ad_account_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (item.profile_ad_account_id && item.profile_ad_account_id.toString().includes(searchTerm))
   );
 
@@ -161,8 +159,27 @@ export default function AdSpendHourly() {
       </div>
 
       <div className="bg-zinc-900 rounded-xl border border-zinc-800">
-        <div className="p-4 border-b border-zinc-800">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-4 border-b border-zinc-800 space-y-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-wrap">
+            <div className="relative flex-1 min-w-[140px] sm:max-w-[200px]">
+              <label className="block text-xs text-gray-400 mb-1">Ad Account ID</label>
+              <input
+                type="text"
+                placeholder="Filter by ad account..."
+                value={filterAdAccountId}
+                onChange={(e) => setFilterAdAccountId(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+            <div className="flex-1 min-w-[140px] sm:max-w-[180px]">
+              <label className="block text-xs text-gray-400 mb-1">Spend Date</label>
+              <input
+                type="date"
+                value={filterSpendDate}
+                onChange={(e) => setFilterSpendDate(e.target.value)}
+                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
             <div className="relative flex-1 sm:flex-initial w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -176,7 +193,7 @@ export default function AdSpendHourly() {
             <Button
               variant="primary"
               onClick={() => handleOpenModal()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-end sm:self-auto"
             >
               <Plus className="w-4 h-4" />
               <span>Add Record</span>
@@ -185,7 +202,7 @@ export default function AdSpendHourly() {
         </div>
 
         <div className="overflow-x-auto max-w-full">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[1100px]">
             <thead className="bg-zinc-800 text-gray-300">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
@@ -194,14 +211,18 @@ export default function AdSpendHourly() {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Spend Date</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Hour</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold">Amount</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">Diff Spend</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Diff Date</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">Impression</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Time Range</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Raw Response Diff</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="9" className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan="12" className="px-4 py-8 text-center text-gray-400">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <span>Loading...</span>
@@ -210,7 +231,7 @@ export default function AdSpendHourly() {
                 </tr>
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan="12" className="px-4 py-8 text-center text-gray-400">
                     No records found
                   </td>
                 </tr>
@@ -235,10 +256,22 @@ export default function AdSpendHourly() {
                     <td className="px-4 py-3 text-sm">{formatDateOnly(item.spend_date)}</td>
                     <td className="px-4 py-3 text-sm text-center">{item.spend_hour}:00</td>
                     <td className="px-4 py-3 text-sm text-right">
-                      Rp {item.spend_amount.toLocaleString('id-ID', { minimumFractionDigits: 2 })}
+                      {formatRpTwoDecimals(Number(item.spend_amount) || 0)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right">
+                      {item.diff_spend_amount != null ? formatRpTwoDecimals(item.diff_spend_amount) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {item.diff_date ? formatDateOnly(item.diff_date) : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right">
+                      {item.impression != null ? Number(item.impression).toLocaleString('id-ID') : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-xs">
                       {formatDateOnly(item.time_range_start)} - {formatDateOnly(item.time_range_end)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500 max-w-[120px] truncate" title={item.raw_response_diff != null ? String(item.raw_response_diff) : ''}>
+                      {item.raw_response_diff != null && item.raw_response_diff !== '' ? (typeof item.raw_response_diff === 'string' ? item.raw_response_diff.slice(0, 40) + (item.raw_response_diff.length > 40 ? '…' : '') : JSON.stringify(item.raw_response_diff).slice(0, 40) + '…') : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
@@ -258,7 +291,6 @@ export default function AdSpendHourly() {
         </div>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-zinc-900 rounded-xl border border-zinc-800 w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
