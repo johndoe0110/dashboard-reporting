@@ -17,7 +17,7 @@ function computeMetricsFromData(row) {
       newDeposits: 0,
       redepositCount: 0,
       totalDeposits: 0,
-      revenue: 0,
+      totalNewDepoAmount: 0,
       redepoTotalForm: 0,
       firstDepoOrganic: 0,
       firstDepoAds: 0,
@@ -55,7 +55,7 @@ function computeMetricsFromData(row) {
     newDeposits: newDepo,
     redepositCount: redepo,
     totalDeposits: Number(row.total_deposit_amount) || 0,
-    revenue: totalNewDepoAmount,
+    totalNewDepoAmount,
     redepoTotalForm,
     firstDepoOrganic,
     firstDepoAds,
@@ -133,7 +133,7 @@ export default function Dashboard() {
         {!hasLoaded ? (
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 md:p-12 text-center">
             <p className="text-gray-400 text-sm md:text-base">
-              Pilih <strong className="text-gray-300">brand</strong> dan <strong className="text-gray-300">tanggal</strong>, lalu klik <strong className="text-gray-300">Load</strong> untuk menampilkan data.
+              Pilih <strong className="text-gray-300">brand</strong> dan <strong className="text-gray-300">tanggal</strong> untuk menampilkan data.
             </p>
           </div>
         ) : showErrorBox ? (
@@ -142,7 +142,7 @@ export default function Dashboard() {
               {envelope?.message || 'Data tidak ditemukan untuk kombinasi brand dan tanggal tersebut.'}
             </p>
             <p className="text-gray-500 text-xs mt-2">
-              Silakan pilih ulang brand & tanggal, lalu klik Load.
+              Data tidak ditemukan untuk kombinasi brand dan tanggal tersebut. Silakan pilih ulang brand & tanggal.
             </p>
           </div>
         ) : (

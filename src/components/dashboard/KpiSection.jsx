@@ -19,7 +19,7 @@ export default function KpiSection({ summary, loading }) {
   const newDepo = s.newDeposits ?? 0;
   const redepo = s.redepositCount ?? 0;
   const totalDepo = s.totalDeposits ?? 0;
-  const totalNewDepoAmount = s.revenue ?? 0;
+  const totalNewDepoAmount = s.totalNewDepoAmount ?? 0;
 
   const redepoTotalForm = s.redepoTotalForm ?? 0;
   const firstDepoOrganic = s.firstDepoOrganic ?? 0;
@@ -60,7 +60,7 @@ export default function KpiSection({ summary, loading }) {
           title="DAILY AD SPEND"
           value={loading ? '...' : formatRpTwoDecimals(dailyAdSpend)}
           color="blue"
-          description="API total_ad_spent"
+          description="Total Spending"
           icon={TrendingUp}
         />
         {/* 3. Difference Daily Ad Spent */}
@@ -68,7 +68,7 @@ export default function KpiSection({ summary, loading }) {
           title="DIFFERENCE DAILY AD SPENT"
           value={loading ? '...' : formatRpTwoDecimals(diffDailyAdSpend)}
           color="purple"
-          description="API total_diff_ad_spent"
+          description="Total Diff Ad Spending"
           icon={ArrowDownCircle}
         />
         {/* 4. New Regis */}
@@ -76,7 +76,7 @@ export default function KpiSection({ summary, loading }) {
           title="NEW REGIS"
           value={loading ? '...' : String(newReg)}
           color="green"
-          description="api.new_registration_count"
+          description="New Member Registration"
           icon={UserPlus}
         />
         {/* 5. First Depo : C */}
@@ -84,7 +84,7 @@ export default function KpiSection({ summary, loading }) {
           title="FIRST DEPO : C"
           value={loading ? '...' : String(newDepo)}
           color="purple"
-          description="api.new_deposit_count"
+          description="New Deposit Member"
           icon={Wallet}
         />
         {/* 6. Redepo */}
@@ -92,15 +92,15 @@ export default function KpiSection({ summary, loading }) {
           title="REDEPO"
           value={loading ? '...' : String(redepo)}
           color="red"
-          description="api.redeposit_count"
+          description="Member Re-deposit"
           icon={TrendingUp}
         />
         {/* 7. Total Deposit */}
         <KpiCard
-          title="TOTAL DEPOSIT"
+          title="TOTAL DEPO"
           value={valText(totalDepo)}
           color="orange"
-          description="api.total_deposit_amount"
+          description="Total Deposit"
           icon={Wallet}
         />
         {/* 8. Total New Depo */}
@@ -108,7 +108,7 @@ export default function KpiSection({ summary, loading }) {
           title="TOTAL NEW DEPO"
           value={valText(totalNewDepoAmount)}
           color="purple"
-          description="api.total_new_deposit_amount"
+          description="Total New Deposit"
           icon={Wallet}
         />
         {/* 9. Redepo Total Form */}
@@ -116,7 +116,7 @@ export default function KpiSection({ summary, loading }) {
           title="REDEPO TOTAL FORM"
           value={loading ? '...' : redepoTotalForm.toFixed(2)}
           color="blue"
-          description="redeposit_count - new_deposit_count"
+          description="Re-deposit - New Deposit Member"
           icon={ArrowDownCircle}
         />
         {/* 10. First Depo Organic (3%) : D */}
@@ -132,7 +132,7 @@ export default function KpiSection({ summary, loading }) {
           title="FIRST DEPO ADS (C - D)"
           value={loading ? '...' : firstDepoAds.toFixed(2)}
           color="orange"
-          description="new_deposit_count - D"
+          description="Total New Deposit - FIRST DEPO ORGANIC (3%) : D"
           icon={TrendingUp}
         />
         {/* 12. AVG/DEPO */}
@@ -140,7 +140,7 @@ export default function KpiSection({ summary, loading }) {
           title="AVG/DEPO"
           value={loading ? '...' : formatRpDecimal(avgPerDepo)}
           color="blue"
-          description="total_new_deposit_amount / new_deposit_count"
+          description="Total New Deposit / new_deposit_count"
           icon={Calculator}
         />
         {/* 13. %Reg/Depo Ads */}
@@ -148,31 +148,31 @@ export default function KpiSection({ summary, loading }) {
           title="%REG/DEPO ADS"
           value={loading ? '...' : formatPercentage(regPerDepoAdsPct, 2)}
           color="purple"
-          description="(new_deposit_count / new_registration_count) * 100"
+          description="(New Depo / New Regis) * 100"
           icon={Percent}
         />
         {/* 14. CPR */}
         <KpiCard
-          title="CPR"
+          title="COST PER REGISTRATION"
           value={loading ? '...' : formatRpDecimal(cpr)}
           color="green"
-          description="total_ad_spent / new_registration_count"
+          description="Total Ad Spending / New Regis"
           icon={Calculator}
         />
         {/* 15. CPD */}
         <KpiCard
-          title="CPD"
+          title="COST PER DEPO"
           value={loading ? '...' : formatRpDecimal(cpd)}
           color="green"
-          description="total_ad_spent / new_deposit_count"
+          description="Total Ad Spending / New Depo"
           icon={Calculator}
         />
         {/* 16. CPD 3% */}
         <KpiCard
-          title="CPD 3%"
+          title="COST PER DEPO (CUT 3%)"
           value={loading ? '...' : formatRpDecimal(cpd3)}
           color="green"
-          description="total_ad_spent / First Depo Ads"
+          description="Total Ad Spending / First Depo Ads"
           icon={Calculator}
         />
         {/* 17. ROAS */}
@@ -180,7 +180,7 @@ export default function KpiSection({ summary, loading }) {
           title="ROAS"
           value={loading ? '...' : `${Number(roas).toFixed(2)}x`}
           color="orange"
-          description="total_ad_spent / total_new_deposit_amount"
+          description="Total Ad Spending / Total New Depo"
           icon={TrendingUp}
         />
       </div>

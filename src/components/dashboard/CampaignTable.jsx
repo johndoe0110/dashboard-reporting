@@ -9,8 +9,8 @@ export default function CampaignTable({ brandId, spendDate, enabled }) {
     queryKey: ['ad-spend-hourly-dashboard', brandId, spendDate],
     queryFn: () =>
       adSpendHourlyAPI.listNoThrow(1, 99999, {
-        brand_id: brandId,
-        spend_date: spendDate,
+        // brand_id: brandId,
+        // spend_date: spendDate,
       }),
     enabled: hasFilters,
   });
@@ -61,13 +61,14 @@ export default function CampaignTable({ brandId, spendDate, enabled }) {
           <thead className="bg-zinc-800 text-gray-300">
             <tr>
               <th className="px-3 py-2 text-left">ID</th>
+              <th className="px-3 py-2 text-left">Profile Ad Account ID</th>
               <th className="px-3 py-2 text-left">Ad Account ID</th>
               <th className="px-3 py-2 text-left">Spend Date</th>
               <th className="px-3 py-2 text-center">Hour</th>
               <th className="px-3 py-2 text-right">Spend Amount</th>
               <th className="px-3 py-2 text-right">Diff Spend</th>
-              <th className="px-3 py-2 text-right">Impression</th>
-              <th className="px-3 py-2 text-left">Raw Response Diff</th>
+              <th className="px-3 py-2 text-center">Diff Date</th>
+              <th className="px-3 py-2 text-center">Impression</th>
             </tr>
           </thead>
           <tbody>
@@ -84,6 +85,7 @@ export default function CampaignTable({ brandId, spendDate, enabled }) {
                   className="border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors"
                 >
                   <td className="px-3 py-2 text-gray-300">{item.id}</td>
+                  <td className="px-3 py-2 text-gray-300 font-mono">{item.profile_ad_account_id}</td>
                   <td className="px-3 py-2 text-gray-300 font-mono">{item.ad_account_id}</td>
                   <td className="px-3 py-2 text-gray-300">
                     {item.spend_date
@@ -99,14 +101,13 @@ export default function CampaignTable({ brandId, spendDate, enabled }) {
                   <td className="px-3 py-2 text-right text-gray-300">
                     {formatCurrency(Number(item.diff_spend_amount || 0))}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-300">
-                    {item.impression != null ? Number(item.impression).toLocaleString('id-ID') : '-'}
+                  <td className="px-3 py-2 text-gray-300 text-center">
+                    {item.diff_date
+                      ? new Date(item.diff_date).toLocaleDateString('id-ID')
+                      : '-'}
                   </td>
-                  <td
-                    className="px-3 py-2 text-gray-500 max-w-[260px] truncate"
-                    title={item.raw_response_diff != null ? String(item.raw_response_diff) : ''}
-                  >
-                    {item.raw_response_diff != null ? String(item.raw_response_diff) : '—'}
+                  <td className="px-3 py-2 text-center text-gray-300">
+                    {item.impression != null ? Number(item.impression).toLocaleString('id-ID') : '-'}
                   </td>
                 </tr>
               ))

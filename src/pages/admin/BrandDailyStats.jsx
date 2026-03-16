@@ -276,11 +276,11 @@ export default function BrandDailyStats() {
                       {row.date ? new Date(row.date).toLocaleDateString('id-ID') : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm">{getBrandName(row.brand_id)}</td>
-                    <td className="px-4 py-3 text-sm text-right">{row.new_registration_count}</td>
-                    <td className="px-4 py-3 text-sm text-right">{row.new_deposit_count}</td>
-                    <td className="px-4 py-3 text-sm text-right">{row.redeposit_count}</td>
-                    <td className="px-4 py-3 text-sm text-right">{formatCurrency(Number(row.total_deposit_amount || 0))}</td>
-                    <td className="px-4 py-3 text-sm text-right">{formatCurrency(Number(row.total_new_deposit_amount || 0))}</td>
+                    <td className="px-4 py-3 text-sm text-center">{row.new_registration_count}</td>
+                    <td className="px-4 py-3 text-sm text-center">{row.new_deposit_count}</td>
+                    <td className="px-4 py-3 text-sm text-center">{row.redeposit_count}</td>
+                    <td className="px-4 py-3 text-sm text-center">{formatCurrency(Number(row.total_deposit_amount || 0))}</td>
+                    <td className="px-4 py-3 text-sm text-center">{formatCurrency(Number(row.total_new_deposit_amount || 0))}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => openDetail(row.id)} className="p-1.5 text-gray-400 hover:bg-zinc-700 rounded" title="Detail">
