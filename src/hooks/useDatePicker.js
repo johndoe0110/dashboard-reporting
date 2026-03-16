@@ -3,6 +3,7 @@ import { isToday } from '../utils/dateUtils';
 
 /**
  * Custom hook untuk date picker
+ * @param {Date|null} initialDate - initial date; null = no date selected (empty)
  */
 export function useDatePicker(initialDate = new Date()) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -19,6 +20,6 @@ export function useDatePicker(initialDate = new Date()) {
     selectedDate,
     setSelectedDate: changeDate,
     wgToday,
-    isToday: isToday(selectedDate),
+    isToday: selectedDate ? isToday(selectedDate) : false,
   };
 }

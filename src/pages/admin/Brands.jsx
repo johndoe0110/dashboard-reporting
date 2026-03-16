@@ -88,7 +88,7 @@ export default function Brands() {
     try {
       setError('');
       await brandsAPI.delete(id);
-      await loadData();
+      await queryClient.invalidateQueries({ queryKey: ['brands'] });
     } catch (err) {
       setError(err.message || 'Failed to delete brand');
       console.error('Error deleting data:', err);

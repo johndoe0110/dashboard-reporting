@@ -1,38 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { rpaRunAccountsAPI, rpaRunsAPI, profileAdAccountsAPI } from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 
 export default function RpaRunAccounts() {
-  const [data, setData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [runs, setRuns] = useState([]);
-  const [adAccounts, setAdAccounts] = useState([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: runAccRes, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['rpa-run-accounts'],
+    queryFn: () => rpaRunAccountsAPI.list(1, 99999),
+  });
+  const { data: runsRes } = useQuery({
+    queryKey: ['rpa-runs'],
+    queryFn: () => rpaRunsAPI.list(1, 99999),
+  });
+  const { data: adAccRes } = useQuery({
+    queryKey: ['profile-ad-accounts'],
+    queryFn: () => profileAdAccountsAPI.list(1, 99999),
+  });
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const [runAccRes, runsRes, adAccRes] = await Promise.all([
-        rpaRunAccountsAPI.list(1, 99999),
-        rpaRunsAPI.list(1, 99999),
-        profileAdAccountsAPI.list(1, 99999),
-      ]);
-      setData(runAccRes?.data?.list || []);
-      setRuns(runsRes?.data?.list || []);
-      setAdAccounts(adAccRes?.data?.list || []);
-    } catch (err) {
-      setError(err.message || 'Failed to load RPA run accounts');
-      console.error('Error loading data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const data = runAccRes?.data?.list || [];
+  const runs = runsRes?.data?.list || [];
+  const adAccounts = adAccRes?.data?.list || [];
+
+  const displayError = error || (queryError ? (queryError.message || 'Failed to load RPA run accounts') : '');
 
   const filteredData = data.filter(item =>
     item.rpa_run_id.toString().includes(searchTerm) ||
@@ -50,9 +42,9 @@ export default function RpaRunAccounts() {
       <div className="mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-blue-400 mb-2">RPA Run Accounts</h1>
         <p className="text-sm sm:text-base text-gray-400 break-words">Manage RPA run account records</p>
-        {error && (
+        {displayError && (
           <div className="mt-4 bg-red-500/10 border border-red-500/40 rounded-lg p-3">
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-400 text-sm">{displayError}</p>
           </div>
         )}
       </div>
