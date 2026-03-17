@@ -9,8 +9,8 @@ export default function CampaignTable({ brandId, spendDate, enabled }) {
     queryKey: ['ad-spend-hourly-dashboard', brandId, spendDate],
     queryFn: () =>
       adSpendHourlyAPI.listNoThrow(1, 99999, {
-        // brand_id: brandId,
-        // spend_date: spendDate,
+        brand_id: brandId,
+        spend_date: spendDate,
       }),
     enabled: hasFilters,
   });
